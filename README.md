@@ -32,5 +32,3 @@ A complete Task Management web application with authentication, scheduling, Exce
 - **Scheduler (@Scheduled)**
 
 ---
-## 📊 ER Diagram
-
