@@ -35,4 +35,7 @@ public class VehicleService {
        v.setUpdatedAt(LocalDateTime.now());
          return vehicleRepository.save(v);
     }
+    public void deleteVehicle(Long id) {
+        vehicleRepository.deleteById(id);
+    }
 }

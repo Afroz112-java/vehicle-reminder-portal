@@ -48,4 +48,10 @@ public class VehicleController {
 
         }
     }
+    //5.Endpoint to Delete a vehicle
+    @DeleteMapping
+    public String deleteVehicleById(@PathVariable Long id) {
+         vehicleService.deleteVehicle(id);
+         return "Vehicle deleted";
+    }
 }
