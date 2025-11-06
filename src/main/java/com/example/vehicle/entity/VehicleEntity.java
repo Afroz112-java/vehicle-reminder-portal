@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 public class VehicleEntity {
 
     @Id
-    @GeneratedValue(stratergy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String regNumber;
