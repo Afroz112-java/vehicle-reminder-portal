@@ -15,13 +15,13 @@ public class VehicleController {
 
 
     // 1. Endpoint to add a new vehicle
-    @PostMapping
+    @PostMapping("/addVehicle")
     public Vehicle addVehicle(@RequestBody Vehicle vehicle) {
         return vehicleService.addVehicle(vehicle);
     }
 
     // 2.  Endpoint to retrieve all vehicles+
-    @GetMapping
+    @GetMapping("/fetchAll")
     public List<Vehicle> getAll() {
         return vehicleService.getAllVehicles();
     }
@@ -49,7 +49,7 @@ public class VehicleController {
         }
     }
     //5.Endpoint to Delete a vehicle
-    @DeleteMapping
+    @DeleteMapping("{id}")
     public String deleteVehicleById(@PathVariable Long id) {
          vehicleService.deleteVehicle(id);
          return "Vehicle deleted";
