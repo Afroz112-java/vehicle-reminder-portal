@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
 		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -16,10 +15,11 @@
 	<artifactId>vehicle-reminder</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>vehicle-reminder</name>
-	<description>Vehicle Service  Insurance Reminder Portal</description>
+	<description>Vehicle Service Insurance Reminder Portal</description>
 
 	<properties>
 		<java.version>21</java.version>
+		<timefold-solver.version>1.8.0</timefold-solver.version>
 	</properties>
 
 	<dependencies>
@@ -28,16 +28,6 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 
 		<dependency>
@@ -53,12 +43,6 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-cache</artifactId>
-		</dependency>
-
-		<!-- Scheduler -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter</artifactId>
 		</dependency>
 
 		<!-- PostgreSQL -->
@@ -85,7 +69,6 @@
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<scope>provided</scope>
 			<optional>true</optional>
 		</dependency>
 
@@ -97,11 +80,10 @@
 			<optional>true</optional>
 		</dependency>
 
-		<!-- H2 for Testing -->
+		<!-- JPA -->
 		<dependency>
-			<groupId>com.h2database</groupId>
-			<artifactId>h2</artifactId>
-			<scope>test</scope>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
 
 		<!-- Testing -->
@@ -133,7 +115,6 @@
 
 	<build>
 		<plugins>
-
 			<!-- Java Compiler -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -153,9 +134,7 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
-
 		</plugins>
 	</build>
-
 
 </project>
