@@ -1,7 +1,7 @@
-package com.example.vehicle.service;
+package net.konic.vehicle.service;
 
-import com.example.vehicle.entity.Vehicle;
-import com.example.vehicle.repository.VehicleRepository;
+import net.konic.vehicle.entity.Vehicle;
+import net.konic.vehicle.repository.VehicleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

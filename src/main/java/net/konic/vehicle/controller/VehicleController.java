@@ -1,7 +1,7 @@
-package com.example.vehicle.controller;
+package net.konic.vehicle.controller;
 
-import com.example.vehicle.entity.Vehicle;
-import com.example.vehicle.service.VehicleService;
+import net.konic.vehicle.entity.Vehicle;
+import net.konic.vehicle.service.VehicleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

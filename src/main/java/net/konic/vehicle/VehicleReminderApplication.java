@@ -1,4 +1,4 @@
-package com.example.vehicle;
+package net.konic.vehicle;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
