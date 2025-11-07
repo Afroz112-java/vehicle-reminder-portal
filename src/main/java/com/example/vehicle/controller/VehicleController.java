@@ -34,7 +34,7 @@ public class VehicleController {
     }
 
 // 4. Endpoint to update a vehicle
-@PutMapping("/{id}")
+    @PutMapping("/{id}")
     public Vehicle update(@PathVariable Long id, @RequestBody Vehicle v) {
         return vehicleService.updateVehicle(id,v);
 
