@@ -4,10 +4,14 @@ import com.example.vehicle.entity.Vehicle;
 import com.example.vehicle.service.VehicleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
+//import com.yourpackage.model.Vehicle;
+
 
 import java.util.List;
 
 @RestController
+@RequestMapping("/api/vehicles")
 public class VehicleController {
 
     @Autowired
@@ -35,19 +39,9 @@ public class VehicleController {
     // 4. Endpoint to update a vehicle
     @PutMapping("/{id}")
     public Vehicle updateVehicle(@PathVariable Long id, @RequestBody Vehicle vehicleDetails) {
-        Vehicle vehicle = vehicleService.getVehicleById(id);
-        if (vehicle != null) {
-            vehicle.setRegNumber(vehicleDetails.getRegNumber());
-            vehicle.setBrand(vehicleDetails.getBrand());
-            vehicle.setModel(vehicleDetails.getModel());
-            vehicle.setInsuranceExpiryDate(vehicleDetails.getInsuranceExpiryDate());
-            vehicle.setServiceDueDate(vehicleDetails.getServiceDueDate());
-            return vehicleService.updateVehicle(id, vehicle);
-        } else {
-            return null;
-
-        }
+        return vehicleService.updateVehicle(id, vehicleDetails);
     }
+
     //5.Endpoint to Delete a vehicle
     @DeleteMapping("{id}")
     public String deleteVehicleById(@PathVariable Long id) {
