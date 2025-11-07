@@ -1,4 +1,4 @@
-package com.example.vehicle.entity;
+package net.konic.vehicle.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
