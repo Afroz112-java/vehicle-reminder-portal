@@ -11,6 +11,7 @@ import net.konic.vehicle.repository.UserRepository;
 import net.konic.vehicle.repository.VehicleRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +34,7 @@ public class UserService {
         return mapTodto(user);
     }
 
+
     @Transactional
     public Userdto updateProfile(Long userId, UpdateUserdto dto) {
         log.info("Updating profile for userId={}", userId);
@@ -51,6 +53,7 @@ public class UserService {
 
         return mapTodto(updated);
     }
+
     private Userdto mapTodto(UserEntity user) {
         Userdto dto = new Userdto();
         dto.setId(user.getId());
@@ -61,5 +64,13 @@ public class UserService {
         dto.setCreatedAt(user.getCreatedAt());
         dto.setUpdatedAt(user.getUpdatedAt());
         return dto;
+    }
+
+    public User getUserById(Long userId) {
+        return getUserById(userId);
+    }
+
+    public User updateUserProfile(Long userId, User updatedUser) {
+        return updatedUser;
     }
 }
