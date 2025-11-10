@@ -26,8 +26,19 @@ public class Vehicle {
     private String model;
     private LocalDate insuranceExpiryDate;
     private LocalDate serviceDueDate;
-    private String User;
+    private String ownerName;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private boolean active = true;
+    private boolean active;
+    @PrePersist
+    public void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
 }

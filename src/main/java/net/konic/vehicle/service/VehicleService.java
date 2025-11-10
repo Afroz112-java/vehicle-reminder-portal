@@ -30,11 +30,20 @@ public class VehicleService {
     }
 
     // 4. Method to update a vehicle
-    public Vehicle updateVehicle(Long id, Vehicle v) {
-       v.setId(id);
-       v.setUpdatedAt(LocalDateTime.now());
-         return vehicleRepository.save(v);
+    public Vehicle updateVehicle(Long id, Vehicle vehicleDetails) {
+        return vehicleRepository.findById(id)
+                .map(existingVehicle -> {
+                    existingVehicle.setRegNumber(vehicleDetails.getRegNumber());
+                    existingVehicle.setBrand(vehicleDetails.getBrand());
+                    existingVehicle.setModel(vehicleDetails.getModel());
+                    existingVehicle.setInsuranceExpiryDate(vehicleDetails.getInsuranceExpiryDate());
+                    existingVehicle.setServiceDueDate(vehicleDetails.getServiceDueDate());
+                    existingVehicle.setUpdatedAt(LocalDateTime.now());
+                    return vehicleRepository.save(existingVehicle);
+                })
+                .orElse(null);
     }
+    // 5. Method to delete a vehicle
     public void deleteVehicle(Long id) {
         vehicleRepository.deleteById(id);
     }
