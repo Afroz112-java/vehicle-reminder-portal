@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequestMapping("/api/vehicle")
 public class VehicleController {
 
     @Autowired
@@ -32,21 +33,11 @@ public class VehicleController {
         return vehicleService.getVehicleById(vehicleId);
     }
 
-    // 4. Endpoint to update a vehicle
+// 4. Endpoint to update a vehicle
     @PutMapping("/{id}")
-    public Vehicle updateVehicle(@PathVariable Long id, @RequestBody Vehicle vehicleDetails) {
-        Vehicle vehicle = vehicleService.getVehicleById(id);
-        if (vehicle != null) {
-            vehicle.setRegNumber(vehicleDetails.getRegNumber());
-            vehicle.setBrand(vehicleDetails.getBrand());
-            vehicle.setModel(vehicleDetails.getModel());
-            vehicle.setInsuranceExpiryDate(vehicleDetails.getInsuranceExpiryDate());
-            vehicle.setServiceDueDate(vehicleDetails.getServiceDueDate());
-            return vehicleService.updateVehicle(id, vehicle);
-        } else {
-            return null;
+    public Vehicle update(@PathVariable Long id, @RequestBody Vehicle v) {
+        return vehicleService.updateVehicle(id,v);
 
-        }
     }
     //5.Endpoint to Delete a vehicle
     @DeleteMapping("{id}")
