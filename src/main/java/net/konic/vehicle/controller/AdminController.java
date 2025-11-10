@@ -24,6 +24,11 @@ public class AdminController {
 
     // ---------------- USER MANAGEMENT ----------------
 
+    @PostMapping("/user")
+    public ResponseEntity<UserEntity> createUser(@RequestBody UserEntity user) {
+        return ResponseEntity.ok(adminService.createUser(user));
+    }
+
     @GetMapping("/users")
     public ResponseEntity<List<UserEntity>> getAllUsers() {
         return ResponseEntity.ok(adminService.getAllUsers());
@@ -34,10 +39,9 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getUserById(id));
     }
 
-    // ✅ Create user with vehicles
-    @PostMapping("/user")
-    public ResponseEntity<UserEntity> createUser(@RequestBody UserEntity user) {
-        return ResponseEntity.ok(adminService.createUser(user));
+    @PutMapping("/user/{id}")
+    public ResponseEntity<UserEntity> updateUser(@PathVariable Long id, @RequestBody UserEntity user) {
+        return ResponseEntity.ok(adminService.updateUser(id, user));
     }
 
     @DeleteMapping("/user/{id}")
@@ -46,6 +50,11 @@ public class AdminController {
     }
 
     // ---------------- VEHICLE MANAGEMENT ----------------
+
+    @PostMapping
+    public ResponseEntity<Vehicle> createVehicle(@RequestBody Vehicle vehicle) {
+        return ResponseEntity.ok(adminService.createVehicle(vehicle));
+    }
 
     @GetMapping("/vehicles")
     public ResponseEntity<List<Vehicle>> getAllVehicles() {
@@ -57,10 +66,9 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getVehicleById(id));
     }
 
-    // ✅ Create Vehicle (optional — can link to existing user by ID)
-    @PostMapping()
-    public ResponseEntity<Vehicle> createVehicle(@RequestBody Vehicle vehicle) {
-        return ResponseEntity.ok(adminService.createVehicle(vehicle));
+    @PutMapping("/vehicle/{id}")
+    public ResponseEntity<Vehicle> updateVehicle(@PathVariable Long id, @RequestBody Vehicle vehicle) {
+        return ResponseEntity.ok(adminService.updateVehicle(id, vehicle));
     }
 
     @DeleteMapping("/vehicle/{id}")
@@ -68,7 +76,7 @@ public class AdminController {
         return ResponseEntity.ok(adminService.deleteVehicle(id));
     }
 
-    // ---------------- DASHBOARD SUMMARY ----------------
+    // ---------------- DASHBOARD ----------------
 
     @GetMapping("/dashboard")
     public ResponseEntity<Map<String, Object>> getDashboardSummary() {

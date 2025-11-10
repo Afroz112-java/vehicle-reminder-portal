@@ -23,6 +23,14 @@ public class AdminService {
     }
 
     // ---------------- USER MANAGEMENT ----------------
+    @CacheEvict(value = {"users", "user"}, allEntries = true)
+    public UserEntity createUser(UserEntity user) {
+        // Link user ↔ vehicles
+        if (user.getVehicles() != null) {
+            user.getVehicles().forEach(v -> v.setUser(user));
+        }
+        return userRepository.save(user);
+    }
 
     @Cacheable("users")
     public List<UserEntity> getAllUsers() {
@@ -37,12 +45,23 @@ public class AdminService {
     }
 
     @CacheEvict(value = {"users", "user"}, allEntries = true)
-    public UserEntity createUser(UserEntity user) {
-        // link user ↔ vehicles
-        if (user.getVehicles() != null) {
-            user.getVehicles().forEach(v -> v.setUser(user));
+    public UserEntity updateUser(Long userId, UserEntity updatedUser) {
+        UserEntity existingUser = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+
+        existingUser.setName(updatedUser.getName());
+        existingUser.setEmail(updatedUser.getEmail());
+        existingUser.setPhone(updatedUser.getPhone());
+        existingUser.setRole(updatedUser.getRole());
+        existingUser.setPassword(updatedUser.getPassword());
+
+        // Update vehicles (if provided)
+        if (updatedUser.getVehicles() != null) {
+            updatedUser.getVehicles().forEach(v -> v.setUser(existingUser));
+            existingUser.setVehicles(updatedUser.getVehicles());
         }
-        return userRepository.save(user);
+
+        return userRepository.save(existingUser);
     }
 
     @CacheEvict(value = {"users", "user"}, allEntries = true)
@@ -55,6 +74,10 @@ public class AdminService {
     }
 
     // ---------------- VEHICLE MANAGEMENT ----------------
+    @CacheEvict(value = {"vehicles", "vehicle"}, allEntries = true)
+    public Vehicle createVehicle(Vehicle vehicle) {
+        return vehicleRepository.save(vehicle);
+    }
 
     @Cacheable("vehicles")
     public List<Vehicle> getAllVehicles() {
@@ -69,8 +92,19 @@ public class AdminService {
     }
 
     @CacheEvict(value = {"vehicles", "vehicle"}, allEntries = true)
-    public Vehicle createVehicle(Vehicle vehicle) {
-        return vehicleRepository.save(vehicle);
+    public Vehicle updateVehicle(Long vehicleId, Vehicle updatedVehicle) {
+        Vehicle existingVehicle = vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> new RuntimeException("Vehicle not found: " + vehicleId));
+
+        existingVehicle.setRegNumber(updatedVehicle.getRegNumber());
+        existingVehicle.setBrand(updatedVehicle.getBrand());
+        existingVehicle.setModel(updatedVehicle.getModel());
+        existingVehicle.setInsuranceExpiryDate(updatedVehicle.getInsuranceExpiryDate());
+        existingVehicle.setServiceDueDate(updatedVehicle.getServiceDueDate());
+        existingVehicle.setOwnerName(updatedVehicle.getOwnerName());
+        existingVehicle.setActive(updatedVehicle.isActive());
+
+        return vehicleRepository.save(existingVehicle);
     }
 
     @CacheEvict(value = {"vehicles", "vehicle"}, allEntries = true)
@@ -83,7 +117,6 @@ public class AdminService {
     }
 
     // ---------------- DASHBOARD ----------------
-
     public long getTotalUsers() {
         return userRepository.count();
     }
