@@ -52,6 +52,12 @@
 			<scope>runtime</scope>
 		</dependency>
 
+		<!-- ✅ Hibernate Ehcache -->
+		<dependency>
+			<groupId>org.hibernate.orm</groupId>
+			<artifactId>hibernate-ehcache</artifactId>
+		</dependency>
+
 		<!-- Timefold Solver -->
 		<dependency>
 			<groupId>ai.timefold.solver</groupId>
