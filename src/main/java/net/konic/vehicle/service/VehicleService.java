@@ -1,15 +1,26 @@
 package net.konic.vehicle.service;
 
+import com.opencsv.CSVReader;
 import net.konic.vehicle.dto.ApiResponse;
+import net.konic.vehicle.entity.UserEntity;
 import net.konic.vehicle.entity.Vehicle;
+import net.konic.vehicle.repository.UserRepository;
 import net.konic.vehicle.repository.VehicleRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.InputStreamReader;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
 public class VehicleService {
+    @Autowired
+    private UserRepository userRepository;
+
 
     private final VehicleRepository vehicleRepository;
 
@@ -68,4 +79,52 @@ public class VehicleService {
     public long getTotalVehicles() {
         return vehicleRepository.count();
     }
+
+    public void saveUserAndVehiclesFromCsv(MultipartFile file) {
+
+        try (CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream()))) {
+
+            String[] row;
+            boolean header = true;
+
+            while ((row = reader.readNext()) != null) {
+
+                if (header) {
+                    header = false;
+                    continue;
+                }
+
+                String fullName = row[0];
+                String email = row[1];
+
+                // Check if user already exists
+                UserEntity user = userRepository.findByEmail(email)
+                        .orElseGet(() -> {
+                            UserEntity newUser = new UserEntity();
+                            //newUser.getName();     // ✅ Correct
+                            newUser.setName(fullName);
+                            newUser.setEmail(email);   // ✅ Correct
+                            newUser.setRole("USER");   // optional default role
+                            return userRepository.save(newUser);
+                        });
+
+
+                // Create vehicle
+                Vehicle vehicle = new Vehicle();
+                vehicle.setRegNumber(row[2]);
+                vehicle.setBrand(row[3]);
+                vehicle.setModel(row[4]);
+                vehicle.setInsuranceExpiryDate(LocalDate.parse(row[5]));
+                vehicle.setServiceDueDate(LocalDate.parse(row[6]));
+                vehicle.setActive(Boolean.parseBoolean(row[7]));
+                vehicle.setUser(user); // Assign FK
+
+                vehicleRepository.save(vehicle);
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error reading CSV: " + e.getMessage());
+        }
+    }
+
 }
