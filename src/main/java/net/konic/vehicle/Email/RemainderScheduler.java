@@ -3,9 +3,8 @@ package net.konic.vehicle.Email;
 
 import net.konic.vehicle.entity.Vehicle;
 import net.konic.vehicle.repository.VehicleRepository;
-import net.konic.vehicle.service.AdminService;
+import net.konic.vehicle.service.VehicleService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cglib.core.Local;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +15,7 @@ import java.util.List;
 public class RemainderScheduler {
 
     @Autowired
-    private AdminService adminService;
+    private VehicleService vehicleService;
     @Autowired
     private EmailService emailService;
     @Autowired
