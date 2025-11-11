@@ -16,7 +16,7 @@ public class VehicleController {
 
 
     // 1. Endpoint to add a new vehicle
-    @PostMapping("/addVehicle")
+    @PostMapping( )
     public Vehicle addVehicle(@RequestBody Vehicle vehicle) {
         return vehicleService.addVehicle(vehicle);
     }
