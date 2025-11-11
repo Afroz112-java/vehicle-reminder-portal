@@ -1,9 +1,9 @@
-package com.example.vehicle.Scheduler;
+package net.konic.vehicle.Email;
 
-import com.example.vehicle.Email.EmailService;
-import com.example.vehicle.entity.Vehicle;
-import com.example.vehicle.repository.VehicleRepository;
-import com.example.vehicle.service.VehicleService;
+
+import net.konic.vehicle.entity.Vehicle;
+import net.konic.vehicle.repository.VehicleRepository;
+import net.konic.vehicle.service.AdminService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.core.Local;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -16,7 +16,7 @@ import java.util.List;
 public class RemainderScheduler {
 
     @Autowired
-    private VehicleService vehicleService;
+    private AdminService adminService;
     @Autowired
     private EmailService emailService;
     @Autowired
@@ -42,7 +42,6 @@ public class RemainderScheduler {
             }
         }
         System.out.println("Checked all vehicles for reminder on: " + today);
-
 
     }
 }
