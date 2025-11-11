@@ -1,6 +1,5 @@
 package net.konic.vehicle.service;
 
-import com.opencsv.CSVReader;
 import net.konic.vehicle.dto.ApiResponse;
 import net.konic.vehicle.entity.UserEntity;
 import net.konic.vehicle.entity.Vehicle;

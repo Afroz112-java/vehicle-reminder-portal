@@ -24,7 +24,6 @@ public class Vehicle {
     private LocalDate insuranceExpiryDate;
     private LocalDate serviceDueDate;
     private String ownerName;
-    private String ownerEmail;
     private boolean active;
 
     private LocalDateTime createdAt;
