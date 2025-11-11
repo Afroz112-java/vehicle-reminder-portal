@@ -8,16 +8,19 @@ import net.konic.vehicle.dto.RegisterRequest;
 import net.konic.vehicle.entity.AuthEntity;
 import net.konic.vehicle.repository.AuthRepository;
 import net.konic.vehicle.security.JwtTokenUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
+//@RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
-
-    private final AuthRepository authRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtTokenUtil jwtTokenUtil;
+    @Autowired
+    private AuthRepository authRepository;
+    @Autowired
+    private  PasswordEncoder passwordEncoder;
+    @Autowired
+    private  JwtTokenUtil jwtTokenUtil;
 
     @Override
     public AuthResponse register(RegisterRequest request) {

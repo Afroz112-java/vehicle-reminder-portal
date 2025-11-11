@@ -7,16 +7,17 @@ import net.konic.vehicle.dto.LoginRequest;
 import net.konic.vehicle.dto.RegisterRequest;
 import net.konic.vehicle.security.JwtTokenUtil;
 import net.konic.vehicle.service.AuthService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
-@RequiredArgsConstructor
 public class AuthController {
-
-    private final AuthService authService;
-    private final JwtTokenUtil jwtTokenUtil;
+@Autowired
+    private  AuthService authService;
+@Autowired
+    private  JwtTokenUtil jwtTokenUtil;
 
     // Register new user (open endpoint)
     @PostMapping("/register")
@@ -36,7 +37,7 @@ public class AuthController {
     @GetMapping("/validate")
     public ResponseEntity<String> validate(@RequestParam String token) {
         if (jwtTokenUtil.validateToken(token)) {
-            String username = jwtTokenUtil.getUsername(token); // Use correct method name
+            String username = jwtTokenUtil.getUsernameFromToken(token); // Use correct method name
             return ResponseEntity.ok("Valid token for user: " + username);
         } else {
             return ResponseEntity.badRequest().body("Invalid or expired token!");

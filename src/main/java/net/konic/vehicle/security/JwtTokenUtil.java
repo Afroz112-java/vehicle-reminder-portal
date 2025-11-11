@@ -1,8 +1,6 @@
 package net.konic.vehicle.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -16,29 +14,29 @@ public class JwtTokenUtil {
     private String secret;
 
     @Value("${app.jwt.expiration}")
-    private Long expiration; // in milliseconds
+    private Long expiration;
 
-    // Generate JWT token with username only
+    // Generate JWT token
     public String generateToken(String username) {
         return Jwts.builder()
-                .setSubject(username) // username as subject
-                .setIssuedAt(new Date()) // token issue time
-                .setExpiration(new Date(System.currentTimeMillis() + expiration)) // token expiration
-                .signWith(Keys.hmacShaKeyFor(secret.getBytes())) // sign the token
+                .setSubject(username)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(Keys.hmacShaKeyFor(secret.getBytes()))
                 .compact();
     }
 
-    // Extract username from token
-    public String getUsername(String token) {
-        Claims claims = Jwts.parserBuilder()
+    // Extract username from JWT token
+    public String getUsernameFromToken(String token) {
+        return Jwts.parserBuilder()
                 .setSigningKey(Keys.hmacShaKeyFor(secret.getBytes()))
                 .build()
                 .parseClaimsJws(token)
-                .getBody();
-        return claims.getSubject();
+                .getBody()
+                .getSubject();
     }
 
-    // Validate token
+    // Validate JWT token
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()
@@ -46,8 +44,8 @@ public class JwtTokenUtil {
                     .build()
                     .parseClaimsJws(token);
             return true;
-        } catch (JwtException | IllegalArgumentException e) {
-            return false; // invalid or expired token
+        } catch (JwtException e) {
+            return false;
         }
     }
 }
