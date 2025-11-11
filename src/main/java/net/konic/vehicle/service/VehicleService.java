@@ -6,6 +6,7 @@ import net.konic.vehicle.repository.VehicleRepository;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 
 @Service
@@ -17,55 +18,57 @@ public class VehicleService {
         this.vehicleRepository = vehicleRepository;
     }
 
-    // Create vehicle
+    // ---------------- VEHICLE CRUD ----------------
+
     @CacheEvict(value = {"vehicles", "vehicle"}, allEntries = true)
     public Vehicle createVehicle(Vehicle vehicle) {
         return vehicleRepository.save(vehicle);
     }
 
-    // Get all vehicles
     @Cacheable("vehicles")
     public List<Vehicle> getAllVehicles() {
         System.out.println("Fetching vehicles from DB...");
         return vehicleRepository.findAll();
     }
 
-    // Get vehicle by ID
-    @Cacheable(value = "vehicle", key = "#vehicleId")
-    public Vehicle getVehicleById(Long vehicleId) {
-        return vehicleRepository.findById(vehicleId)
-                .orElseThrow(() -> new RuntimeException("Vehicle not found: " + vehicleId));
+    @Cacheable(value = "vehicle", key = "#id")
+    public Vehicle getVehicleById(Long id) {
+        return vehicleRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Vehicle not found: " + id));
     }
 
-    // Update vehicle
     @CacheEvict(value = {"vehicles", "vehicle"}, allEntries = true)
-    public Vehicle updateVehicle(Long vehicleId, Vehicle updatedVehicle) {
-        Vehicle existingVehicle = vehicleRepository.findById(vehicleId)
-                .orElseThrow(() -> new RuntimeException("Vehicle not found: " + vehicleId));
-
-        existingVehicle.setRegNumber(updatedVehicle.getRegNumber());
-        existingVehicle.setBrand(updatedVehicle.getBrand());
-        existingVehicle.setModel(updatedVehicle.getModel());
-        existingVehicle.setInsuranceExpiryDate(updatedVehicle.getInsuranceExpiryDate());
-        existingVehicle.setServiceDueDate(updatedVehicle.getServiceDueDate());
-        existingVehicle.setOwnerName(updatedVehicle.getOwnerName());
-        existingVehicle.setActive(updatedVehicle.isActive());
-
-        return vehicleRepository.save(existingVehicle);
+    public Vehicle updateVehicle(Long id, Vehicle newVehicle) {
+        Vehicle existing = getVehicleById(id);
+        existing.setRegNumber(newVehicle.getRegNumber());
+        existing.setBrand(newVehicle.getBrand());
+        existing.setModel(newVehicle.getModel());
+        existing.setInsuranceExpiryDate(newVehicle.getInsuranceExpiryDate());
+        existing.setServiceDueDate(newVehicle.getServiceDueDate());
+        existing.setOwnerName(newVehicle.getOwnerName());
+        existing.setActive(newVehicle.isActive());
+        return vehicleRepository.save(existing);
     }
 
-    // Delete vehicle
     @CacheEvict(value = {"vehicles", "vehicle"}, allEntries = true)
-    public ApiResponse deleteVehicle(Long vehicleId) {
-        if (!vehicleRepository.existsById(vehicleId)) {
-            return new ApiResponse(false, "Vehicle not found: " + vehicleId);
+    public ApiResponse deleteVehicle(Long id) {
+        if (!vehicleRepository.existsById(id)) {
+            return new ApiResponse(false, "Vehicle not found: " + id);
         }
-        vehicleRepository.deleteById(vehicleId);
+        vehicleRepository.deleteById(id);
         return new ApiResponse(true, "Vehicle deleted successfully");
     }
 
-    // Dashboard stats
+    // ---------------- DASHBOARD ----------------
     public long getTotalVehicles() {
         return vehicleRepository.count();
+    }
+
+    public long getTotalUsers() {
+        // Count distinct users by looping through vehicles
+        return vehicleRepository.findAll().stream()
+                .map(v -> v.getUser().getEmail())
+                .distinct()
+                .count();
     }
 }
