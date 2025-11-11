@@ -24,13 +24,14 @@ public class Vehicle {
     private LocalDate insuranceExpiryDate;
     private LocalDate serviceDueDate;
     private String ownerName;
+    private String Email;
     private boolean active;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     // ✅ Many vehicles → one user
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(cascade = CascadeType.PERSIST,fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     @JsonBackReference
     private UserEntity user;

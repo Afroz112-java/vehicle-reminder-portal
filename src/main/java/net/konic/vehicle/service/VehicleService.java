@@ -1,7 +1,9 @@
 package net.konic.vehicle.service;
 
 import net.konic.vehicle.dto.ApiResponse;
+import net.konic.vehicle.entity.UserEntity;
 import net.konic.vehicle.entity.Vehicle;
+import net.konic.vehicle.repository.UserRepository;
 import net.konic.vehicle.repository.VehicleRepository;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -12,15 +14,24 @@ import java.util.List;
 public class VehicleService {
 
     private final VehicleRepository vehicleRepository;
+    private final UserRepository userRepository;
 
-    public VehicleService(VehicleRepository vehicleRepository) {
+    public VehicleService(VehicleRepository vehicleRepository, UserRepository userRepository) {
         this.vehicleRepository = vehicleRepository;
+        this.userRepository = userRepository;
     }
 
     // Create vehicle
     @CacheEvict(value = {"vehicles", "vehicle"}, allEntries = true)
     public Vehicle createVehicle(Vehicle vehicle) {
-        return vehicleRepository.save(vehicle);
+        String email=vehicle.getUser().getEmail();
+        UserEntity user=userRepository.findByEmail(email).orElseGet(()->{
+            UserEntity newUser= vehicle.getUser();
+            return userRepository.save(newUser);
+        });
+        vehicle.setUser(user);
+        return vehicleRepository
+                .save(vehicle);
     }
 
     // Get all vehicles
