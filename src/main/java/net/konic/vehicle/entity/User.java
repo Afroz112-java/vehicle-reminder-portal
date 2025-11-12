@@ -26,7 +26,7 @@ public class User {
     private LocalDateTime updatedAt;
 
     // ✅ One user → many vehicles
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<Vehicle> vehicles;
 
