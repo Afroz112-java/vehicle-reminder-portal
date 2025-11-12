@@ -21,10 +21,9 @@ public class Vehicle {
     private String regNumber;
     private String brand;
     private String model;
-    private LocalDate insuranceExpiryDate;
-    private LocalDate serviceDueDate;
-    private String ownerName;
-    private boolean active;
+    private String insuranceExpiryDate;
+    private String serviceDueDate;
+
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

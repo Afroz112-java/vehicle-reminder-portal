@@ -1,5 +1,6 @@
 package net.konic.vehicle.service;
 
+import com.opencsv.CSVReader;
 import net.konic.vehicle.dto.ApiResponse;
 import net.konic.vehicle.entity.UserEntity;
 import net.konic.vehicle.entity.Vehicle;
@@ -58,8 +59,8 @@ public class VehicleService {
         existingVehicle.setModel(updatedVehicle.getModel());
         existingVehicle.setInsuranceExpiryDate(updatedVehicle.getInsuranceExpiryDate());
         existingVehicle.setServiceDueDate(updatedVehicle.getServiceDueDate());
-        existingVehicle.setOwnerName(updatedVehicle.getOwnerName());
-        existingVehicle.setActive(updatedVehicle.isActive());
+       // existingVehicle.setOwnerName(updatedVehicle.getOwnerName());
+       // existingVehicle.setActive(updatedVehicle.isActive());
 
         return vehicleRepository.save(existingVehicle);
     }
@@ -103,7 +104,7 @@ public class VehicleService {
                             //newUser.getName();     // ✅ Correct
                             newUser.setName(fullName);
                             newUser.setEmail(email);   // ✅ Correct
-                            newUser.setRole("USER");   // optional default role
+                           // newUser.setRole("USER");   // optional default role
                             return userRepository.save(newUser);
                         });
 
@@ -113,9 +114,9 @@ public class VehicleService {
                 vehicle.setRegNumber(row[2]);
                 vehicle.setBrand(row[3]);
                 vehicle.setModel(row[4]);
-                vehicle.setInsuranceExpiryDate(LocalDate.parse(row[5]));
-                vehicle.setServiceDueDate(LocalDate.parse(row[6]));
-                vehicle.setActive(Boolean.parseBoolean(row[7]));
+                vehicle.setInsuranceExpiryDate((row[5]));
+                vehicle.setServiceDueDate((row[6]));
+               // vehicle.setActive(Boolean.parseBoolean(row[7]));
                 vehicle.setUser(user); // Assign FK
 
                 vehicleRepository.save(vehicle);
