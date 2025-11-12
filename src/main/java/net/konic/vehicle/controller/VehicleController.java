@@ -60,11 +60,10 @@ public class VehicleController {
         return ResponseEntity.ok(dashboard);
     }
 
+    // Upload CSV
     @PostMapping("/upload-csv")
     public ResponseEntity<String> uploadCsv(@RequestParam("file") MultipartFile file) {
         vehicleService.saveUserAndVehiclesFromCsv(file);
         return ResponseEntity.ok("CSV Uploaded Successfully");
     }
-
-
 }
