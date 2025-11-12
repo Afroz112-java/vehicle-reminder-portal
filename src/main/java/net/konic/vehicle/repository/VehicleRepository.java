@@ -14,8 +14,8 @@ import java.util.List;
 public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
 
     @Query("SELECT v FROM Vehicle v WHERE v.serviceDueDate <= :targetDate")
-    List<Vehicle> findVehiclesForServiceReminder(LocalDate targetDate);
+    List<Vehicle> findVehiclesForServiceReminder(String targetDate);
 
     @Query("SELECT v FROM Vehicle v WHERE v.insuranceExpiryDate <= :targetDate")
-    List<Vehicle> findVehiclesForInsuranceReminder(LocalDate targetDate);
+    List<Vehicle> findVehiclesForInsuranceReminder(String targetDate);
 }
