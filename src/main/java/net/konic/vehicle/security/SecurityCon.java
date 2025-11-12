@@ -32,6 +32,9 @@ public class SecurityCon {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/validate").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers("/swagger-ui/**").permitAll()
+                        .requestMatchers("/v3/**").permitAll()
+
                         .anyRequest().authenticated()
                 )
                 // Use JWT entry point for unauthorized responses
