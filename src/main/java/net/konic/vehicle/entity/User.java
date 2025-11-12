@@ -12,7 +12,7 @@ import java.util.List;
 @Setter
 @Entity
 @Table(name = "users")
-public class UserEntity {
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,9 +20,7 @@ public class UserEntity {
 
     private String name;
     private String email;
-    private String password;
     private String phone;
-    private String role;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
