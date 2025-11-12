@@ -22,14 +22,7 @@ public class VehicleService {
 
     @CacheEvict(value = {"vehicles", "vehicle"}, allEntries = true)
     public Vehicle createVehicle(Vehicle vehicle) {
-        String email=vehicle.getUser().getEmail();
-        User user=userRepository.findByEmail(email).orElseGet(()->{
-            User newUser= vehicle.getUser();
-            return userRepository.save(newUser);
-        });
-        vehicle.setUser(user);
-        return vehicleRepository
-                .save(vehicle);
+        return vehicleRepository.save(vehicle);
     }
 
     @Cacheable("vehicles")
@@ -52,6 +45,8 @@ public class VehicleService {
         existing.setModel(newVehicle.getModel());
         existing.setInsuranceExpiryDate(newVehicle.getInsuranceExpiryDate());
         existing.setServiceDueDate(newVehicle.getServiceDueDate());
+        existing.setOwnerName(newVehicle.getOwnerName());
+        existing.setActive(newVehicle.isActive());
         return vehicleRepository.save(existing);
     }
 
