@@ -28,7 +28,7 @@ public class Vehicle {
     private LocalDateTime updatedAt;
 
     // ✅ Many vehicles → one user
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY, cascade= CascadeType.ALL)
     @JoinColumn(name = "user_id")
     @JsonBackReference
     private User user;
