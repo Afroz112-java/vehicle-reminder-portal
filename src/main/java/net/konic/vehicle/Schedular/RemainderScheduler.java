@@ -39,29 +39,27 @@ public class RemainderScheduler     {
         this.vehicleService = vehicleService;
     }
 
-
-    @Scheduled(cron = "${reminder.scheduler.cron}")
-// Every day at 9 AM
+    // This method runs automatically at a specific time (set in properties)
+    @Scheduled(cron = "${reminder.scheduler.cron}")// Every day at 9 AM
     public void sendReminders() {
-        log.info("Reminder Scheduler started " + Instant.now());
+        log.info("Reminder Scheduler started " + Instant.now());// Logs current time
 
-        // Calculate target dates
-        LocalDate today = LocalDate.now();
+
+        LocalDate today = LocalDate.now();// Get today's date
         LocalDate serviceTarget = today.plusDays(serviceDaysBefore);
         LocalDate insuranceTarget = today.plusDays(insuranceDaysBefore);
 
-
-
-
-        //Fetch from DB
+        // Fetch vehicles from database whose service/insurance is near the target date
         List<Vehicle> serviceVehicles = vehicleRepository.findVehiclesForServiceReminder(serviceTarget);
         List<Vehicle> insuranceVehicles = vehicleRepository.findVehiclesForInsuranceReminder(insuranceTarget);
 
-
-
         log.info("✅ Scheduler completed. Service reminders: {}, Insurance reminders: {}",
                 serviceVehicles.size(), insuranceVehicles.size());
+
+        // To track vehicles that are already processed (to avoid duplicate emails)
         Set<Long> processedVehicleIds= new java.util.HashSet<>();
+
+
 
         for (Vehicle v : serviceVehicles) {
             if (insuranceVehicles.stream().anyMatch(i -> Objects.equals(i.getId(), v.getId()))) {
@@ -84,7 +82,7 @@ public class RemainderScheduler     {
     // ✉️ Combined Email
     private void sendCombinedEmail(Vehicle vehicle) {
         String subject = " Vehicle Reminder: Service & Insurance Due Soon";
-        String body = "Dear " + vehicle.getOwnerName() + ",\n\n" +
+        String body = "Dear " + vehicle.getUser() + ",\n\n" +
                 "This is a friendly reminder that your vehicle *" + vehicle.getRegNumber() + "*:\n" +
                 "• Service is due on: " + vehicle.getServiceDueDate() + "\n" +
                 "• Insurance expires on: " + vehicle.getInsuranceExpiryDate() + "\n\n" +
@@ -95,7 +93,7 @@ public class RemainderScheduler     {
     //Only Service
     private void sendServiceEmail(Vehicle vehicle) {
         String subject = " Service Reminder";
-        String body = "Dear " + vehicle.getOwnerName() + ",\n\n" +
+        String body = "Dear " + vehicle.getUser() + ",\n\n" +
                 "Your vehicle *" + vehicle.getRegNumber() + "* is due for service on " +
                 vehicle.getServiceDueDate() + ".\n\nRegards,\nVehicle Reminder System";
 
@@ -104,7 +102,7 @@ public class RemainderScheduler     {
     //Only Insurance
     private void sendInsuranceEmail(Vehicle vehicle) {
         String subject = "🛡️ Insurance Reminder";
-        String body = "Dear " + vehicle.getOwnerName() + ",\n\n" +
+        String body = "Dear " + vehicle.getUser() + ",\n\n" +
                 "Your vehicle insurance for *" + vehicle.getRegNumber() +
                 "* will expire on " + vehicle.getInsuranceExpiryDate() +
                 ". Please renew soon.\n\nRegards,\nVehicle Reminder System";
@@ -113,10 +111,10 @@ public class RemainderScheduler     {
     }
     //  Common Email Sending Logic
     private void sendEmail(Vehicle vehicle, String subject, String body) {
-        if (vehicle.getEmail() != null) {
-            ReminderDTO dto = new ReminderDTO(vehicle.getEmail(), subject, body);
+        if (vehicle.getUser() != null) {
+            ReminderDTO dto = new ReminderDTO(vehicle.getUser().getEmail(), subject, body);
             emailService.sendEmail(dto);
-            log.info("Email sent to: " + vehicle.getEmail() + " | " + subject);
+            log.info("Email sent to: " + vehicle.getUser().getEmail() + " | " + subject);
         } else {
             log.warn(" No email found for " + vehicle.getRegNumber());
         }
