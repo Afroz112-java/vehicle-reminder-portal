@@ -50,8 +50,8 @@ public class RemainderScheduler     {
         LocalDate insuranceTarget = today.plusDays(insuranceDaysBefore);
 
         // Fetch vehicles from database whose service/insurance is near the target date
-        List<Vehicle> serviceVehicles = vehicleRepository.findVehiclesForServiceReminder(serviceTarget);
-        List<Vehicle> insuranceVehicles = vehicleRepository.findVehiclesForInsuranceReminder(insuranceTarget);
+        List<Vehicle> serviceVehicles = vehicleRepository.findVehiclesForServiceReminder(serviceTarget.toString());
+        List<Vehicle> insuranceVehicles = vehicleRepository.findVehiclesForInsuranceReminder(insuranceTarget.toString());
 
         log.info("✅ Scheduler completed. Service reminders: {}, Insurance reminders: {}",
                 serviceVehicles.size(), insuranceVehicles.size());
