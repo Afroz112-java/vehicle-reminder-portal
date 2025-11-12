@@ -21,17 +21,15 @@ public class Vehicle {
     private String regNumber;
     private String brand;
     private String model;
-    private LocalDate insuranceExpiryDate;
-    private LocalDate serviceDueDate;
-    private String ownerName;
-    private String Email;
-    private boolean active;
+    private String insuranceExpiryDate;
+    private String serviceDueDate;
+
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     // ✅ Many vehicles → one user
-    @ManyToOne(cascade = CascadeType.PERSIST,fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     @JsonBackReference
     private UserEntity user;

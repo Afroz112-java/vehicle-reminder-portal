@@ -5,6 +5,8 @@ import net.konic.vehicle.entity.Vehicle;
 import net.konic.vehicle.service.VehicleService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,4 +59,12 @@ public class VehicleController {
         dashboard.put("totalVehicles", vehicleService.getTotalVehicles());
         return ResponseEntity.ok(dashboard);
     }
+
+    @PostMapping("/upload-csv")
+    public ResponseEntity<String> uploadCsv(@RequestParam("file") MultipartFile file) {
+        vehicleService.saveUserAndVehiclesFromCsv(file);
+        return ResponseEntity.ok("CSV Uploaded Successfully");
+    }
+
+
 }
