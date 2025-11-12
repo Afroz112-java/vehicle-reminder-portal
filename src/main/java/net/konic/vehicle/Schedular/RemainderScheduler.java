@@ -82,7 +82,7 @@ public class RemainderScheduler     {
     // ✉️ Combined Email
     private void sendCombinedEmail(Vehicle vehicle) {
         String subject = " Vehicle Reminder: Service & Insurance Due Soon";
-        String body = "Dear " + vehicle.getUser() + ",\n\n" +
+        String body = "Dear " + vehicle.getUser().getName() + ",\n\n" +
                 "This is a friendly reminder that your vehicle *" + vehicle.getRegNumber() + "*:\n" +
                 "• Service is due on: " + vehicle.getServiceDueDate() + "\n" +
                 "• Insurance expires on: " + vehicle.getInsuranceExpiryDate() + "\n\n" +
