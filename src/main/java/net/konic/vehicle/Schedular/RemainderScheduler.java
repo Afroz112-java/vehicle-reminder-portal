@@ -17,21 +17,22 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-@Component
-@Slf4j
+@Component // Marks this class as a Spring Bean so it runs automatically
+@Slf4j // Lombok annotation — gives us a "log" object for logging info
 public class RemainderScheduler     {
 
+    // Repositories and services needed for this class
     private final VehicleRepository vehicleRepository;
-
     private final EmailService emailService;
-
     private final VehicleService vehicleService;
 
+    // Values taken from application.properties file
     @Value("${reminder.service.daysBefore}")
     private int serviceDaysBefore;
     @Value("${reminder.insurance.daysBefore}")
     private int insuranceDaysBefore;
 
+    // Constructor — used by Spring to inject required dependencies
     public RemainderScheduler(EmailService emailService, VehicleRepository vehicleRepository, VehicleService vehicleService) {
         this.emailService = emailService;
         this.vehicleRepository = vehicleRepository;
