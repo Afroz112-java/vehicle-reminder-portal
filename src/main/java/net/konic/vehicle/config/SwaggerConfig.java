@@ -34,7 +34,7 @@ public class SwaggerConfig {
                         .contact(new Contact()
                                 .name("Konic Technologies")
                                 .email("support@konic.com")
-                                .url("https://konic.com"))
+                                .url("https://www.konic.net/"))
                 .license(new License()
                         .name("Apache 2.0")
                         .url("https://springdoc.org")));
