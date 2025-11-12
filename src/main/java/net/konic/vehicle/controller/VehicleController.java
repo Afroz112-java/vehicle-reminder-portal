@@ -1,57 +1,69 @@
 package net.konic.vehicle.controller;
 
+import net.konic.vehicle.dto.ApiResponse;
 import net.konic.vehicle.entity.Vehicle;
 import net.konic.vehicle.service.VehicleService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
+@RequestMapping("/api/vehicle")
+@CrossOrigin("*")
 public class VehicleController {
 
-    @Autowired
-    private VehicleService vehicleService;
+    private final VehicleService vehicleService;
 
-
-    // 1. Endpoint to add a new vehicle
-    @PostMapping("/addVehicle")
-    public Vehicle addVehicle(@RequestBody Vehicle vehicle) {
-        return vehicleService.addVehicle(vehicle);
+    public VehicleController(VehicleService vehicleService) {
+        this.vehicleService = vehicleService;
     }
 
-    // 2.  Endpoint to retrieve all vehicles+
-    @GetMapping("/fetchAll")
-    public List<Vehicle> getAll() {
-        return vehicleService.getAllVehicles();
+    // Create vehicle
+    @PostMapping
+    public ResponseEntity<Vehicle> createVehicle(@RequestBody Vehicle vehicle) {
+        return ResponseEntity.ok(vehicleService.createVehicle(vehicle));
     }
 
-    // 3. Endpoint to retrieve a vehicle by ID
+    // Get all vehicles
+    @GetMapping
+    public ResponseEntity<List<Vehicle>> getAllVehicles() {
+        return ResponseEntity.ok(vehicleService.getAllVehicles());
+    }
+
+    // Get by ID
     @GetMapping("/{id}")
-    public Vehicle getVehicleById(@RequestParam("vehicleId") Long vehicleId) {
-        return vehicleService.getVehicleById(vehicleId);
+    public ResponseEntity<Vehicle> getVehicleById(@PathVariable Long id) {
+        return ResponseEntity.ok(vehicleService.getVehicleById(id));
     }
 
-    // 4. Endpoint to update a vehicle
+    // Update vehicle
     @PutMapping("/{id}")
-    public Vehicle updateVehicle(@PathVariable Long id, @RequestBody Vehicle vehicleDetails) {
-        Vehicle vehicle = vehicleService.getVehicleById(id);
-        if (vehicle != null) {
-            vehicle.setRegNumber(vehicleDetails.getRegNumber());
-            vehicle.setBrand(vehicleDetails.getBrand());
-            vehicle.setModel(vehicleDetails.getModel());
-            vehicle.setInsuranceExpiryDate(vehicleDetails.getInsuranceExpiryDate());
-            vehicle.setServiceDueDate(vehicleDetails.getServiceDueDate());
-            return vehicleService.updateVehicle(id, vehicle);
-        } else {
-            return null;
-
-        }
+    public ResponseEntity<Vehicle> updateVehicle(@PathVariable Long id, @RequestBody Vehicle vehicle) {
+        return ResponseEntity.ok(vehicleService.updateVehicle(id, vehicle));
     }
-    //5.Endpoint to Delete a vehicle
-    @DeleteMapping("{id}")
-    public String deleteVehicleById(@PathVariable Long id) {
-         vehicleService.deleteVehicle(id);
-         return "Vehicle deleted";
+
+    // Delete vehicle
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse> deleteVehicle(@PathVariable Long id) {
+        return ResponseEntity.ok(vehicleService.deleteVehicle(id));
+    }
+
+    // Dashboard summary
+    @GetMapping("/dashboard")
+    public ResponseEntity<Map<String, Object>> getDashboardSummary() {
+        Map<String, Object> dashboard = new HashMap<>();
+        dashboard.put("totalVehicles", vehicleService.getTotalVehicles());
+        return ResponseEntity.ok(dashboard);
+    }
+
+    // Upload CSV
+    @PostMapping("/upload-csv")
+    public ResponseEntity<String> uploadCsv(@RequestParam("file") MultipartFile file) {
+        vehicleService.saveUserAndVehiclesFromCsv(file);
+        return ResponseEntity.ok("CSV Uploaded Successfully");
     }
 }

@@ -1,37 +1,34 @@
 package net.konic.vehicle.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
 @Entity
-@Table(name = "vehicles")
-public class Vehicle {
+@Table(name = "users")
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String regNumber;
-    private String brand;
-    private String model;
-    private String insuranceExpiryDate;
-    private String serviceDueDate;
-
+    private String name;
+    private String email;
+    private String phone;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    // ✅ Many vehicles → one user
-    @ManyToOne(fetch = FetchType.EAGER, cascade= CascadeType.ALL)
-    @JoinColumn(name = "user_id")
-    @JsonBackReference
-    private User user;
+    // ✅ One user → many vehicles
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<Vehicle> vehicles;
 
     @PrePersist
     public void onCreate() {
@@ -43,6 +40,4 @@ public class Vehicle {
     public void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-
 }
