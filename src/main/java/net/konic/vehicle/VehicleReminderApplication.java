@@ -8,7 +8,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableCaching
 @EnableScheduling
-
 public class VehicleReminderApplication {
 
 	// Main method to run the Spring Boot application
