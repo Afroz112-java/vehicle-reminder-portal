@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
@@ -21,19 +20,18 @@ public class Vehicle {
     private String regNumber;
     private String brand;
     private String model;
-    private LocalDate insuranceExpiryDate;
-    private LocalDate serviceDueDate;
-    private String ownerName;
-    private boolean active;
+    private String insuranceExpiryDate;
+    private String serviceDueDate;
+
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     // ✅ Many vehicles → one user
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY, cascade= CascadeType.ALL)
     @JoinColumn(name = "user_id")
     @JsonBackReference
-    private UserEntity user;
+    private User user;
 
     @PrePersist
     public void onCreate() {
@@ -45,4 +43,6 @@ public class Vehicle {
     public void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
+
 }
