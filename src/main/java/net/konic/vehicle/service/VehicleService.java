@@ -30,7 +30,14 @@ public class VehicleService {
     // Create vehicle
     @CacheEvict(value = {"vehicles", "vehicle"}, allEntries = true)
     public Vehicle createVehicle(Vehicle vehicle) {
-        return vehicleRepository.save(vehicle);
+        String email=vehicle.getUser().getEmail();
+        User user=userRepository.findByEmail(email).orElseGet(()->{
+            User newUser= vehicle.getUser();
+            return userRepository.save(newUser);
+        });
+        vehicle.setUser(user);
+        return vehicleRepository
+                .save(vehicle);
     }
 
     // Get all vehicles
