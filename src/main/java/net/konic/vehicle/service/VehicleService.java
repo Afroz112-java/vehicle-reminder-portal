@@ -2,7 +2,7 @@ package net.konic.vehicle.service;
 
 import com.opencsv.CSVReader;
 import net.konic.vehicle.dto.ApiResponse;
-import net.konic.vehicle.entity.UserEntity;
+import net.konic.vehicle.entity.User;
 import net.konic.vehicle.entity.Vehicle;
 import net.konic.vehicle.repository.UserRepository;
 import net.konic.vehicle.repository.VehicleRepository;
@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStreamReader;
-import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -98,9 +97,9 @@ public class VehicleService {
                 String email = row[1];
 
                 // Check if user already exists
-                UserEntity user = userRepository.findByEmail(email)
+                User user = userRepository.findByEmail(email)
                         .orElseGet(() -> {
-                            UserEntity newUser = new UserEntity();
+                            User newUser = new User();
                             //newUser.getName();     // ✅ Correct
                             newUser.setName(fullName);
                             newUser.setEmail(email);   // ✅ Correct

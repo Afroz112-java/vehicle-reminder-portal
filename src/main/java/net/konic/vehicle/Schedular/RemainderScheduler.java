@@ -1,5 +1,6 @@
-package Schedular;
+package net.konic.vehicle.Schedular;
 
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import net.konic.vehicle.Email.EmailService;
 import net.konic.vehicle.dto.ReminderDTO;
@@ -16,45 +17,49 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-@Component
-@Slf4j
+@Component // Marks this class as a Spring Bean so it runs automatically
+@Slf4j // Lombok annotation — gives us a "log" object for logging info
 public class RemainderScheduler     {
 
+    // Repositories and services needed for this class
     private final VehicleRepository vehicleRepository;
-
     private final EmailService emailService;
-
     private final VehicleService vehicleService;
 
+    // Values taken from application.properties file
     @Value("${reminder.service.daysBefore}")
     private int serviceDaysBefore;
     @Value("${reminder.insurance.daysBefore}")
     private int insuranceDaysBefore;
 
+    // Constructor — used by Spring to inject required dependencies
     public RemainderScheduler(EmailService emailService, VehicleRepository vehicleRepository, VehicleService vehicleService) {
         this.emailService = emailService;
         this.vehicleRepository = vehicleRepository;
         this.vehicleService = vehicleService;
     }
 
-
-    @Scheduled(cron = " ${reminder.scheduler.cron}")// Every day at 9 AM
+    // This method runs automatically at a specific time (set in properties)
+    @Scheduled(cron = "${reminder.scheduler.cron}")// Every day at 9 AM
     public void sendReminders() {
-        log.info("Reminder Scheduler started " + Instant.now());
+        log.info("Reminder Scheduler started " + Instant.now());// Logs current time
 
-        // Calculate target dates
-        LocalDate today = LocalDate.now();
+
+        LocalDate today = LocalDate.now();// Get today's date
         LocalDate serviceTarget = today.plusDays(serviceDaysBefore);
         LocalDate insuranceTarget = today.plusDays(insuranceDaysBefore);
 
+        // Fetch vehicles from database whose service/insurance is near the target date
+        List<Vehicle> serviceVehicles = vehicleRepository.findVehiclesForServiceReminder(serviceTarget);
+        List<Vehicle> insuranceVehicles = vehicleRepository.findVehiclesForInsuranceReminder(insuranceTarget);
 
+        log.info("✅ Scheduler completed. Service reminders: {}, Insurance reminders: {}",
+                serviceVehicles.size(), insuranceVehicles.size());
 
-
-        //Fetch from DB
-        List<Vehicle> serviceVehicles = vehicleRepository.findVehiclesForServiceReminder(serviceTarget.atStartOfDay());
-        List<Vehicle> insuranceVehicles = vehicleRepository.findVehiclesForInsuranceReminder(insuranceTarget.atStartOfDay());
-
+        // To track vehicles that are already processed (to avoid duplicate emails)
         Set<Long> processedVehicleIds= new java.util.HashSet<>();
+
+
 
         for (Vehicle v : serviceVehicles) {
             if (insuranceVehicles.stream().anyMatch(i -> Objects.equals(i.getId(), v.getId()))) {
@@ -96,8 +101,8 @@ public class RemainderScheduler     {
     }
     //Only Insurance
     private void sendInsuranceEmail(Vehicle vehicle) {
-        String subject = " Insurance Reminder";
-        String body = "Dear " + vehicle.getUser().getEmail() + ",\n\n" +
+        String subject = "🛡️ Insurance Reminder";
+        String body = "Dear " + vehicle.getUser() + ",\n\n" +
                 "Your vehicle insurance for *" + vehicle.getRegNumber() +
                 "* will expire on " + vehicle.getInsuranceExpiryDate() +
                 ". Please renew soon.\n\nRegards,\nVehicle Reminder System";
@@ -106,7 +111,7 @@ public class RemainderScheduler     {
     }
     //  Common Email Sending Logic
     private void sendEmail(Vehicle vehicle, String subject, String body) {
-        if (vehicle.getUser().getEmail() != null) {
+        if (vehicle.getUser() != null) {
             ReminderDTO dto = new ReminderDTO(vehicle.getUser().getEmail(), subject, body);
             emailService.sendEmail(dto);
             log.info("Email sent to: " + vehicle.getUser().getEmail() + " | " + subject);
