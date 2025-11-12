@@ -45,8 +45,6 @@ public class VehicleService {
         existing.setModel(newVehicle.getModel());
         existing.setInsuranceExpiryDate(newVehicle.getInsuranceExpiryDate());
         existing.setServiceDueDate(newVehicle.getServiceDueDate());
-        existing.setOwnerName(newVehicle.getOwnerName());
-        existing.setActive(newVehicle.isActive());
         return vehicleRepository.save(existing);
     }
 
