@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStreamReader;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -96,6 +98,7 @@ public class VehicleService {
     }
 
     public void saveUserAndVehiclesFromCsv(MultipartFile file) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         try (CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream()))) {
             String[] row;
             boolean header = true;
@@ -149,8 +152,8 @@ public class VehicleService {
                 vehicle.setRegNumber(regNumber);
                 vehicle.setBrand(brand);
                 vehicle.setModel(model);
-                vehicle.setInsuranceExpiryDate(insuranceExpiry);
-                vehicle.setServiceDueDate(serviceDue);
+                vehicle.setInsuranceExpiryDate(LocalDate.parse(insuranceExpiry, formatter));
+                vehicle.setServiceDueDate(LocalDate.parse(serviceDue, formatter));
                 vehicle.setUser(user);
 
                 vehicleRepository.save(vehicle);
