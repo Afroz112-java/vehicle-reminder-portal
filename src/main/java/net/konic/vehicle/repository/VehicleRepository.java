@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 // This is the Repository interface for Vehicle entity
 
@@ -18,4 +19,6 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
 
     @Query("SELECT v FROM Vehicle v WHERE v.insuranceExpiryDate <= :targetDate")
     List<Vehicle> findVehiclesForInsuranceReminder(String targetDate);
+
+    Optional<Vehicle> findByRegNumber(String regNumber);
 }

@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class VehicleService {
@@ -132,6 +133,15 @@ public class VehicleService {
                 if (user.getPhone() == null && phone != null && !phone.isEmpty()) {
                     user.setPhone(phone);
                     userRepository.save(user);
+                }
+
+                // ✅ Check if vehicle already exists
+                Optional<Vehicle> existingVehicleOpt = vehicleRepository.findByRegNumber(regNumber);
+
+                if (existingVehicleOpt.isPresent()) {
+                    // Already in DB — skip adding again
+                    System.out.println("Vehicle with regNumber " + regNumber + " already exists. Skipping insert.");
+                    continue;
                 }
 
                 // ✅ Create and save vehicle
