@@ -53,8 +53,8 @@ public class RemainderScheduler {
         LocalDate serviceTarget = today.plusDays(serviceDaysBefore);
         LocalDate insuranceTarget = today.plusDays(insuranceDaysBefore);
 
-        List<Vehicle> serviceVehicles = vehicleRepository.findVehiclesForServiceReminder(serviceTarget.toString());
-        List<Vehicle> insuranceVehicles = vehicleRepository.findVehiclesForInsuranceReminder(insuranceTarget.toString());
+        List<Vehicle> serviceVehicles = vehicleRepository.findVehiclesForServiceReminder(serviceTarget);
+        List<Vehicle> insuranceVehicles = vehicleRepository.findVehiclesForInsuranceReminder(insuranceTarget);
 
         log.info(" Scheduler fetched vehicles — Service: {}, Insurance: {}",
                 serviceVehicles.size(), insuranceVehicles.size());
