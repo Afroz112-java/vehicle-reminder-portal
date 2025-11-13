@@ -5,9 +5,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
-public class ApiResponse {
-    private boolean success;
+@NoArgsConstructor
+public class AuthResponse {
     private String message;
+    private String token;
 }
