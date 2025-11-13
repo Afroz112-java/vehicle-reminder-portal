@@ -15,7 +15,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStreamReader;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class VehicleService {
@@ -95,6 +98,7 @@ public class VehicleService {
     }
 
     public void saveUserAndVehiclesFromCsv(MultipartFile file) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         try (CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream()))) {
             String[] row;
             boolean header = true;
@@ -105,35 +109,63 @@ public class VehicleService {
                     continue;
                 }
 
-                if (row.length < 7) {
-                    throw new InvalidInputException("Invalid CSV format. Expected 7 columns but got " + row.length);
+                // ✅ Expecting 8 columns: Full Name, Email, Phone, Reg Num, Brand, Model, Insurance, Service Due
+                if (row.length < 8) {
+                    throw new InvalidInputException("Invalid CSV format. Expected 8 columns but got " + row.length);
                 }
 
                 String fullName = row[0];
                 String email = row[1];
+                String phone = row[2];
+                String regNumber = row[3];
+                String brand = row[4];
+                String model = row[5];
+                String insuranceExpiry = row[6];
+                String serviceDue = row[7];
 
+                // ✅ Find or create user
                 User user = userRepository.findByEmail(email).orElseGet(() -> {
                     User newUser = new User();
                     newUser.setName(fullName);
                     newUser.setEmail(email);
+                    newUser.setPhone(phone);
                     return userRepository.save(newUser);
                 });
 
+                // ✅ Update phone if user exists but phone is missing
+                if (user.getPhone() == null && phone != null && !phone.isEmpty()) {
+                    user.setPhone(phone);
+                    userRepository.save(user);
+                }
+
+                // ✅ Check if vehicle already exists
+                Optional<Vehicle> existingVehicleOpt = vehicleRepository.findByRegNumber(regNumber);
+
+                if (existingVehicleOpt.isPresent()) {
+                    // Already in DB — skip adding again
+                    System.out.println("Vehicle with regNumber " + regNumber + " already exists. Skipping insert.");
+                    continue;
+                }
+
+                // ✅ Create and save vehicle
                 Vehicle vehicle = new Vehicle();
-                vehicle.setRegNumber(row[2]);
-                vehicle.setBrand(row[3]);
-                vehicle.setModel(row[4]);
-                vehicle.setInsuranceExpiryDate(row[5]);
-                vehicle.setServiceDueDate(row[6]);
+                vehicle.setRegNumber(regNumber);
+                vehicle.setBrand(brand);
+                vehicle.setModel(model);
+                vehicle.setInsuranceExpiryDate(LocalDate.parse(insuranceExpiry, formatter));
+                vehicle.setServiceDueDate(LocalDate.parse(serviceDue, formatter));
                 vehicle.setUser(user);
 
                 vehicleRepository.save(vehicle);
             }
 
         } catch (InvalidInputException e) {
-            throw e; // Re-throw to be handled by GlobalExceptionHandler
+            throw e; // Let the global handler catch it
         } catch (Exception e) {
             throw new InvalidInputException("Error reading CSV: " + e.getMessage());
         }
     }
+
 }
+
+
