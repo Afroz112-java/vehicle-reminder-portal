@@ -1,11 +1,14 @@
 package net.konic.vehicle.Email;
 
 import net.konic.vehicle.dto.ReminderDTO;
+import net.konic.vehicle.entity.ReminderAudit;
+import net.konic.vehicle.entity.Vehicle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.logging.Logger;
 
 @Service
@@ -29,4 +32,137 @@ public class EmailService {
             logger.warning(" Failed to send email to " + dto.getToEmail() + ": " + e.getMessage());
         }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
