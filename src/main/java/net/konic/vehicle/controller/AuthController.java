@@ -1,6 +1,7 @@
 package net.konic.vehicle.controller;
 
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import net.konic.vehicle.dto.AuthResponse;
 import net.konic.vehicle.dto.LoginRequest;
@@ -21,14 +22,14 @@ public class AuthController {
 
     // Register new user (open endpoint)
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
         AuthResponse response = authService.register(request);
         return ResponseEntity.ok(response);
     }
 
     // User login (generates JWT)
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         AuthResponse response = authService.login(request);
         return ResponseEntity.ok(response);
     }
