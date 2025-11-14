@@ -7,18 +7,18 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "reminder_audit")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Entity                            // Marks this class as a JPA entity (table)
+@Table(name = "reminder_audit")    // Specifies the database table name
+@Data                              // Lombok: generates getters, setters, toString, equals, hashCode
+@NoArgsConstructor                 // Lombok: generates a no-argument constructor
+@AllArgsConstructor                // Lombok: generates an all-arguments constructor
+@Builder                           // Lombok: implements the builder pattern for this class
 @EntityListeners(AuditingEntityListener.class)
 public class ReminderAudit {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Id                             // Marks this field as the primary key
+    @GeneratedValue(strategy = GenerationType.IDENTITY)   // Auto-generates the ID value
+    private Long id;                                      // Primary key
 
     private Long userId;
     private String vehicleRegNumber;
@@ -27,6 +27,6 @@ public class ReminderAudit {
     private boolean emailSent;
     private String message;
 
-    @CreatedDate
+    @CreatedDate                   // Auto-filled when the record is created
     private LocalDateTime sentAt;
 }

@@ -34,18 +34,22 @@ public class VehicleService {
     // Create vehicle
     @CacheEvict(value = {"vehicles", "vehicle"}, allEntries = true)
     public Vehicle createVehicle(Vehicle vehicle) {
+        // Validate: Check if User object or User email is missing
         if (vehicle.getUser() == null || vehicle.getUser().getEmail() == null) {
+            // If missing, throw exception to prevent saving invalid data
             throw new InvalidInputException("User email must be provided to create a vehicle.");
         }
-
+        // Extract the email from the Vehicle’s User object
         String email = vehicle.getUser().getEmail();
+        // Look for an existing user in the database using email
+        // .orElseGet() → if user not found, create a new one
         User user = userRepository.findByEmail(email).orElseGet(() -> {
-            User newUser = vehicle.getUser();
-            return userRepository.save(newUser);
+            User newUser = vehicle.getUser();        // Create new User object from vehicle
+            return userRepository.save(newUser);   // Save the new user to the database
         });
 
-        vehicle.setUser(user);
-        return vehicleRepository.save(vehicle);
+        vehicle.setUser(user);                      // Assign the found or newly created user back to the vehicle
+        return vehicleRepository.save(vehicle);    // Save vehicle to DB
     }
 
     // Get all vehicles
