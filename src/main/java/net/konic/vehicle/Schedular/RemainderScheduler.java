@@ -20,21 +20,23 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-@Component
-@Slf4j
+@Component // Spring will detect and create a bean for this class
+@Slf4j  // Lombok annotation that adds a static logger (log.info, log.error, etc.)
 public class RemainderScheduler {
 
+    // Dependency injections (repositories and services)
     private final VehicleRepository vehicleRepository;
     private final EmailService emailService;
     private final VehicleService vehicleService;
     private final ReminderAuditRepository reminderAuditRepository;
 
+    // Reads values from application.properties like: reminder.service.daysBefore=5
     @Value("${reminder.service.daysBefore}")
     private int serviceDaysBefore;
-
     @Value("${reminder.insurance.daysBefore}")
     private int insuranceDaysBefore;
 
+    // Constructor-based dependency injection (recommended by Spring)
     public RemainderScheduler(EmailService emailService,
                               VehicleRepository vehicleRepository,
                               VehicleService vehicleService,
@@ -44,7 +46,7 @@ public class RemainderScheduler {
         this.vehicleRepository = vehicleRepository;
         this.vehicleService = vehicleService;
     }
-
+    // This method runs automatically at fixed times based on cron expression
     @Scheduled(cron = "${reminder.scheduler.cron}")
     public void sendReminders() {
         log.info("Reminder Scheduler started at {}", Instant.now());
@@ -53,15 +55,19 @@ public class RemainderScheduler {
         LocalDate serviceTarget = today.plusDays(serviceDaysBefore);
         LocalDate insuranceTarget = today.plusDays(insuranceDaysBefore);
 
+        // Fetch vehicles whose service due date or insurance expiry date match the target date
         List<Vehicle> serviceVehicles = vehicleRepository.findVehiclesForServiceReminder(serviceTarget);
         List<Vehicle> insuranceVehicles = vehicleRepository.findVehiclesForInsuranceReminder(insuranceTarget);
 
         log.info(" Scheduler fetched vehicles — Service: {}, Insurance: {}",
                 serviceVehicles.size(), insuranceVehicles.size());
 
+        // To track which vehicles are already processed (to avoid duplicate emails)
         Set<Long> processedVehicleIds = new java.util.HashSet<>();
 
+        // Loop through all vehicles due for service
         for (Vehicle v : serviceVehicles) {
+            // If the same vehicle also has an insurance reminder, send a combined email
             if (insuranceVehicles.stream().anyMatch(i -> Objects.equals(i.getId(), v.getId()))) {
                 sendCombinedEmail(v);
                 processedVehicleIds.add(v.getId());
@@ -69,7 +75,7 @@ public class RemainderScheduler {
                 sendServiceEmail(v);
             }
         }
-
+        // Now handle insurance-only reminders (skip already processed vehicles)
         for (Vehicle v : insuranceVehicles) {
             if (!processedVehicleIds.contains(v.getId())) {
                 sendInsuranceEmail(v);
@@ -80,7 +86,7 @@ public class RemainderScheduler {
     }
 
     // --- EMAIL TEMPLATES ---
-
+    // Combined email for both service + insurance reminders
     private void sendCombinedEmail(Vehicle vehicle) {
         String subject = "Vehicle Reminder: Service & Insurance Due Soon";
         String body = "Dear " + vehicle.getUser().getName() + ",\n\n" +
@@ -91,7 +97,7 @@ public class RemainderScheduler {
 
         sendEmail(vehicle, subject, body, "BOTH");
     }
-
+    // Email only for service due reminder
     private void sendServiceEmail(Vehicle vehicle) {
         String subject = "Service Reminder";
         String body = "Dear " + vehicle.getUser().getName() + ",\n\n" +
@@ -100,7 +106,7 @@ public class RemainderScheduler {
 
         sendEmail(vehicle, subject, body, "SERVICE");
     }
-
+    // Email only for insurance expiry reminder
     private void sendInsuranceEmail(Vehicle vehicle) {
         String subject = " Insurance Reminder";
         String body = "Dear " + vehicle.getUser().getName() + ",\n\n" +
@@ -113,10 +119,11 @@ public class RemainderScheduler {
 
     // --- COMMON EMAIL LOGIC + AUDITING ---
     private void sendEmail(Vehicle vehicle, String subject, String body, String type) {
-        try {
+        try {// Check if user and email are available
             if (vehicle.getUser() != null && vehicle.getUser().getEmail() != null) {
+                // Create ReminderDTO object with email details
                 ReminderDTO dto = new ReminderDTO(vehicle.getUser().getEmail(), subject, body);
-                emailService.sendEmail(dto);
+                emailService.sendEmail(dto);// Call EmailService to actually send the mail
                 log.info(" Email sent to: {} | Type: {}", vehicle.getUser().getEmail(), type);
 
                 auditReminder(vehicle, type, true, "Email sent successfully");
@@ -132,7 +139,9 @@ public class RemainderScheduler {
 
 
     // --- AUDIT HELPER METHOD ---
+    // Create a ReminderAudit entity and populate fields
     private void auditReminder(Vehicle vehicle, String type, boolean success, String message) {
+        // Create a ReminderAudit entity and populate fields
         ReminderAudit audit = ReminderAudit.builder()
                 .userId(vehicle.getId())
                 .vehicleRegNumber(vehicle.getRegNumber())
