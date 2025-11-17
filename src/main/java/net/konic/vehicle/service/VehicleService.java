@@ -31,7 +31,7 @@ public class VehicleService {
 
     // Create vehicle
     @CacheEvict(value = {"vehicles", "vehicle"}, allEntries = true)
-    public Vehicle createVehicle(Vehicle vehicle) {
+    public Vehicle createVehicle(@org.jetbrains.annotations.NotNull Vehicle vehicle) {
         if (vehicle.getUser() == null || vehicle.getUser().getEmail() == null) {
             throw new InvalidInputException("User email must be provided to create a vehicle.");
         }
