@@ -39,6 +39,12 @@ public class Vehicle {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
     }
+    // NEW FLAGS → email sent only once
+    @Column(nullable = false)
+    private boolean serviceReminderSent = false;
+
+    @Column(nullable = false)
+    private boolean insuranceReminderSent = false;
 
     @PreUpdate
     public void onUpdate() {

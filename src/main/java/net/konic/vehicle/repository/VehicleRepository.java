@@ -15,10 +15,10 @@ import java.util.Optional;
 @Repository
 public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
 
-    @Query("SELECT v FROM Vehicle v WHERE v.serviceDueDate <= :targetDate")
+    @Query("SELECT v FROM Vehicle v WHERE v.serviceDueDate <= :targetDate AND v.serviceReminderSent = false")
     List<Vehicle> findVehiclesForServiceReminder(@Param("targetDate") LocalDate targetDate);
 
-    @Query("SELECT v FROM Vehicle v WHERE v.insuranceExpiryDate <= :targetDate")
+    @Query("SELECT v FROM Vehicle v WHERE v.insuranceExpiryDate <= :targetDate AND v.insuranceReminderSent = false")
     List<Vehicle> findVehiclesForInsuranceReminder(@Param("targetDate") LocalDate targetDate);
 
     Optional<Vehicle> findByRegNumber(String regNumber);

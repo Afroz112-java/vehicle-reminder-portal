@@ -1,15 +1,15 @@
 package net.konic.vehicle.Schedular;
 
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import net.konic.vehicle.Email.EmailService;
 import net.konic.vehicle.dto.ReminderDTO;
+import net.konic.vehicle.entity.ReminderConfig;
 import net.konic.vehicle.entity.Vehicle;
 import net.konic.vehicle.entity.ReminderAudit;
 import net.konic.vehicle.repository.ReminderAuditRepository;
 import net.konic.vehicle.repository.VehicleRepository;
+import net.konic.vehicle.service.RemainderConfigService;
 import net.konic.vehicle.service.VehicleService;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -19,140 +19,167 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.HashSet;
 
-@Component // Spring will detect and create a bean for this class
-@Slf4j  // Lombok annotation that adds a static logger (log.info, log.error, etc.)
+@Component
+@Slf4j
 public class RemainderScheduler {
 
-    // Dependency injections (repositories and services)
+    private final RemainderConfigService remainderConfigService;
     private final VehicleRepository vehicleRepository;
     private final EmailService emailService;
     private final VehicleService vehicleService;
     private final ReminderAuditRepository reminderAuditRepository;
 
-    // Reads values from application.properties like: reminder.service.daysBefore=5
-    @Value("${reminder.service.daysBefore}")
-    private int serviceDaysBefore;
-    @Value("${reminder.insurance.daysBefore}")
-    private int insuranceDaysBefore;
-
-    // Constructor-based dependency injection (recommended by Spring)
     public RemainderScheduler(EmailService emailService,
                               VehicleRepository vehicleRepository,
                               VehicleService vehicleService,
-                              ReminderAuditRepository reminderAuditRepository) {
+                              ReminderAuditRepository reminderAuditRepository,
+                              RemainderConfigService remainderConfigService) {
+
+        this.remainderConfigService = remainderConfigService;
         this.reminderAuditRepository = reminderAuditRepository;
         this.emailService = emailService;
         this.vehicleRepository = vehicleRepository;
         this.vehicleService = vehicleService;
     }
-    // This method runs automatically at fixed times based on cron expression
-    @Scheduled(cron = "${reminder.scheduler.cron}")
+
+    // --- DYNAMIC CRON EXPRESSION ---
+    @Scheduled(cron = "#{remainderConfigService.getConfig().getCronExpression()}")
     public void sendReminders() {
+
         log.info("Reminder Scheduler started at {}", Instant.now());
+
+        ReminderConfig config = remainderConfigService.getConfig();
+        int serviceDaysBefore = config.getServiceDaysBefore();
+        int insuranceDaysBefore = config.getInsuranceDaysBefore();
+
+        log.info("Loaded Config → Service: {} days, Insurance: {} days",
+                serviceDaysBefore, insuranceDaysBefore);
 
         LocalDate today = LocalDate.now();
         LocalDate serviceTarget = today.plusDays(serviceDaysBefore);
         LocalDate insuranceTarget = today.plusDays(insuranceDaysBefore);
 
-        // Fetch vehicles whose service due date or insurance expiry date match the target date
         List<Vehicle> serviceVehicles = vehicleRepository.findVehiclesForServiceReminder(serviceTarget);
         List<Vehicle> insuranceVehicles = vehicleRepository.findVehiclesForInsuranceReminder(insuranceTarget);
 
-        log.info(" Scheduler fetched vehicles — Service: {}, Insurance: {}",
+        log.info("Vehicles → Service: {}, Insurance: {}",
                 serviceVehicles.size(), insuranceVehicles.size());
 
-        // To track which vehicles are already processed (to avoid duplicate emails)
-        Set<Long> processedVehicleIds = new java.util.HashSet<>();
+        Set<Long> processedIds = new HashSet<>();
 
-        // Loop through all vehicles due for service
+        // SERVICE + BOTH
         for (Vehicle v : serviceVehicles) {
-            // If the same vehicle also has an insurance reminder, send a combined email
-            if (insuranceVehicles.stream().anyMatch(i -> Objects.equals(i.getId(), v.getId()))) {
+            boolean hasInsurance = insuranceVehicles.stream()
+                    .anyMatch(i -> Objects.equals(i.getId(), v.getId()));
+
+            if (hasInsurance) {
                 sendCombinedEmail(v);
-                processedVehicleIds.add(v.getId());
+                processedIds.add(v.getId());
             } else {
                 sendServiceEmail(v);
             }
         }
-        // Now handle insurance-only reminders (skip already processed vehicles)
+
+        // INSURANCE ONLY
         for (Vehicle v : insuranceVehicles) {
-            if (!processedVehicleIds.contains(v.getId())) {
+            if (!processedIds.contains(v.getId())) {
                 sendInsuranceEmail(v);
             }
         }
 
-        log.info(" Scheduler completed successfully.");
+        log.info("Scheduler completed.");
     }
 
-    // --- EMAIL TEMPLATES ---
-    // Combined email for both service + insurance reminders
-    private void sendCombinedEmail(Vehicle vehicle) {
-        String subject = "Vehicle Reminder: Service & Insurance Due Soon";
-        String body = "Dear " + vehicle.getUser().getName() + ",\n\n" +
-                "This is a friendly reminder that your vehicle " + vehicle.getRegNumber() + ":\n" +
-                "• Service due on: " + vehicle.getServiceDueDate() + "\n" +
-                "• Insurance expires on: " + vehicle.getInsuranceExpiryDate() + "\n\n" +
-                "Please take action to avoid inconvenience.\n\nRegards,\nVehicle Reminder System";
+    // ------------------ EMAIL TEMPLATES ------------------
 
-        sendEmail(vehicle, subject, body, "BOTH");
-    }
-    // Email only for service due reminder
-    private void sendServiceEmail(Vehicle vehicle) {
-        String subject = "Service Reminder";
-        String body = "Dear " + vehicle.getUser().getName() + ",\n\n" +
-                "Your vehicle " + vehicle.getRegNumber() + " is due for service on " +
-                vehicle.getServiceDueDate() + ".\n\nRegards,\nVehicle Reminder System";
-
-        sendEmail(vehicle, subject, body, "SERVICE");
-    }
-    // Email only for insurance expiry reminder
-    private void sendInsuranceEmail(Vehicle vehicle) {
-        String subject = " Insurance Reminder";
-        String body = "Dear " + vehicle.getUser().getName() + ",\n\n" +
-                "Your vehicle insurance for " + vehicle.getRegNumber() +
-                " will expire on " + vehicle.getInsuranceExpiryDate() +
-                ". Please renew soon.\n\nRegards,\nVehicle Reminder System";
-
-        sendEmail(vehicle, subject, body, "INSURANCE");
+    private void sendCombinedEmail(Vehicle v) {
+        sendEmail(v,
+                "Vehicle Reminder: Service & Insurance Due",
+                "Dear " + v.getUser().getName() + ",\n\n" +
+                        "Your vehicle " + v.getRegNumber() + ":\n" +
+                        "• Service due: " + v.getServiceDueDate() + "\n" +
+                        "• Insurance expires: " + v.getInsuranceExpiryDate() + "\n\n" +
+                        "Regards,\nVehicle Reminder System",
+                "BOTH");
     }
 
-    // --- COMMON EMAIL LOGIC + AUDITING ---
+    private void sendServiceEmail(Vehicle v) {
+        sendEmail(v,
+                "Service Reminder",
+                "Dear " + v.getUser().getName() + ",\n\n" +
+                        "Your vehicle " + v.getRegNumber() +
+                        " is due for service on " + v.getServiceDueDate() + ".\n\n" +
+                        "Regards,\nVehicle Reminder System",
+                "SERVICE");
+    }
+
+    private void sendInsuranceEmail(Vehicle v) {
+        sendEmail(v,
+                "Insurance Reminder",
+                "Dear " + v.getUser().getName() + ",\n\n" +
+                        "Your vehicle insurance for " + v.getRegNumber() +
+                        " will expire on " + v.getInsuranceExpiryDate() + ".\n\n" +
+                        "Regards,\nVehicle Reminder System",
+                "INSURANCE");
+    }
+
+    // -------------------- MAIN EMAIL LOGIC ---------------------
+
     private void sendEmail(Vehicle vehicle, String subject, String body, String type) {
-        try {// Check if user and email are available
-            if (vehicle.getUser() != null && vehicle.getUser().getEmail() != null) {
-                // Create ReminderDTO object with email details
-                ReminderDTO dto = new ReminderDTO(vehicle.getUser().getEmail(), subject, body);
-                emailService.sendEmail(dto);// Call EmailService to actually send the mail
-                log.info(" Email sent to: {} | Type: {}", vehicle.getUser().getEmail(), type);
 
-                auditReminder(vehicle, type, true, "Email sent successfully");
-            } else {
-                log.warn("No email found for vehicle: {}", vehicle.getRegNumber());
-                auditReminder(vehicle, type, false, "User email not found");
+        String email = vehicle.getUser() != null ? vehicle.getUser().getEmail() : null;
+
+        // If no user email → DO NOT try to send email
+        if (email == null || email.isEmpty()) {
+            log.warn("Skipping {} reminder → No email for vehicle {}", type, vehicle.getRegNumber());
+            auditReminder(vehicle, type, false, "No user email found");
+            return;
+        }
+
+        try {
+            // Attempt to send
+            emailService.sendEmail(new ReminderDTO(email, subject, body));
+
+            // UPDATE FLAGS
+            if (type.equals("SERVICE")) {
+                vehicle.setServiceReminderSent(true);
+            } else if (type.equals("INSURANCE")) {
+                vehicle.setInsuranceReminderSent(true);
+            } else if (type.equals("BOTH")) {
+                vehicle.setServiceReminderSent(true);
+                vehicle.setInsuranceReminderSent(true);
             }
-        } catch (Exception e) {
-            log.error(" Failed to send email for vehicle: {}", vehicle.getRegNumber(), e);
-            auditReminder(vehicle, type, false, "Email sending failed: " + e.getMessage());
+
+            vehicleRepository.save(vehicle);
+
+
+            log.info("Email SUCCESS → {} | Vehicle: {}", type, vehicle.getRegNumber());
+            auditReminder(vehicle, type, true, "Email sent successfully");
+
+        } catch (Exception ex) {
+            log.error("Email FAILED → {} | Vehicle: {} | Error: {}", type, vehicle.getRegNumber(), ex.getMessage());
+            auditReminder(vehicle, type, false, ex.getMessage());
         }
     }
 
+    // ---------------------- AUDIT -----------------------
 
-    // --- AUDIT HELPER METHOD ---
-    // Create a ReminderAudit entity and populate fields
-    private void auditReminder(Vehicle vehicle, String type, boolean success, String message) {
-        // Create a ReminderAudit entity and populate fields
+    private void auditReminder(Vehicle v, String type, boolean success, String message) {
+
         ReminderAudit audit = ReminderAudit.builder()
-                .userId(vehicle.getId())
-                .vehicleRegNumber(vehicle.getRegNumber())
+                .userId(v.getUser() != null ? v.getUser().getId() : null)
+                .vehicleRegNumber(v.getRegNumber())
                 .reminderType(type)
-                .email(vehicle.getUser() != null ? vehicle.getUser().getEmail() : null)
+                .email(v.getUser() != null ? v.getUser().getEmail() : null)
                 .emailSent(success)
                 .message(message)
                 .sentAt(LocalDateTime.now())
                 .build();
 
         reminderAuditRepository.save(audit);
-        log.info(" Audit record saved for {} | Type: {} | Success: {}", vehicle.getRegNumber(), type, success);
+
+        log.info("Audit → {} | Type: {} | Success: {}", v.getRegNumber(), type, success);
     }
 }
