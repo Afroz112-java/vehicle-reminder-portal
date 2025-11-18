@@ -9,7 +9,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableCaching            // Turns on caching so your app can store frequently used data in memory
 @EnableScheduling         // Enables the scheduler — required for running your reminder cron job
-@EnableJpaAuditing        // Enables auditing so fields like @CreatedDate get auto-populated
+@EnableJpaAuditing        // Enables auditing so fields like @CreatedDate get autopopulated
 
 public class VehicleReminderApplication {
 
