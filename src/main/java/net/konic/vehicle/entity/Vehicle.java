@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
@@ -20,8 +21,8 @@ public class Vehicle {
     private String regNumber;
     private String brand;
     private String model;
-    private String insuranceExpiryDate;
-    private String serviceDueDate;
+    private LocalDate insuranceExpiryDate;
+    private LocalDate serviceDueDate;
 
 
     private LocalDateTime createdAt;

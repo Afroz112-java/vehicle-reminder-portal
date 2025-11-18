@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,10 +16,10 @@ import java.util.Optional;
 public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
 
     @Query("SELECT v FROM Vehicle v WHERE v.serviceDueDate <= :targetDate")
-    List<Vehicle> findVehiclesForServiceReminder(String targetDate);
+    List<Vehicle> findVehiclesForServiceReminder(@Param("targetDate") LocalDate targetDate);
 
     @Query("SELECT v FROM Vehicle v WHERE v.insuranceExpiryDate <= :targetDate")
-    List<Vehicle> findVehiclesForInsuranceReminder(String targetDate);
+    List<Vehicle> findVehiclesForInsuranceReminder(@Param("targetDate") LocalDate targetDate);
 
     Optional<Vehicle> findByRegNumber(String regNumber);
 }

@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStreamReader;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,7 +34,7 @@ public class VehicleService {
     // Create vehicle
     @CacheEvict(value = {"vehicles", "vehicle"}, allEntries = true)
     public Vehicle createVehicle(Vehicle vehicle) {
-        if (vehicle.getUser() == null || vehicle.getUser().getEmail() == null) {
+        if (vehicle .getUser() == null || vehicle.getUser().getEmail() == null) {
             throw new InvalidInputException("User email must be provided to create a vehicle.");
         }
 
@@ -96,6 +98,20 @@ public class VehicleService {
     }
 
     public void saveUserAndVehiclesFromCsv(MultipartFile file) {
+        // 🔍 1. Validate file name (must be .csv)
+        String fileName = file.getOriginalFilename();
+        if (fileName == null || !fileName.toLowerCase().endsWith(".csv")) {
+            throw new InvalidInputException("Invalid file type. Please upload a CSV file only.");
+        }
+
+        // 🔍 2. Validate MIME type (optional but safer)
+        String contentType = file.getContentType();
+        if (contentType != null &&
+                !contentType.equals("text/csv") &&
+                !contentType.equals("application/vnd.ms-excel")) {
+            throw new InvalidInputException("Invalid file format. Only CSV files are supported.");
+        }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         try (CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream()))) {
             String[] row;
             boolean header = true;
@@ -149,8 +165,8 @@ public class VehicleService {
                 vehicle.setRegNumber(regNumber);
                 vehicle.setBrand(brand);
                 vehicle.setModel(model);
-                vehicle.setInsuranceExpiryDate(insuranceExpiry);
-                vehicle.setServiceDueDate(serviceDue);
+                vehicle.setInsuranceExpiryDate(LocalDate.parse(insuranceExpiry, formatter));
+                vehicle.setServiceDueDate(LocalDate.parse(serviceDue, formatter));
                 vehicle.setUser(user);
 
                 vehicleRepository.save(vehicle);
