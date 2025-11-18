@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStreamReader;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 // This is the Service class for Vehicle
@@ -40,7 +42,7 @@ public class VehicleService {
     @CacheEvict(value = {"vehicles", "vehicle"}, allEntries = true)
     //  Creates a new vehicle and associates it with a user
     public Vehicle createVehicle(Vehicle vehicle) {
-        if (vehicle.getUser() == null || vehicle.getUser().getEmail() == null) {
+        if (vehicle .getUser() == null || vehicle.getUser().getEmail() == null) {
             throw new InvalidInputException("User email must be provided to create a vehicle.");
         }
 
@@ -106,6 +108,7 @@ public class VehicleService {
     }
 
     public void saveUserAndVehiclesFromCsv(MultipartFile file) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         try (CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream()))) {
             String[] row;
             boolean header = true;
@@ -159,8 +162,8 @@ public class VehicleService {
                 vehicle.setRegNumber(regNumber);
                 vehicle.setBrand(brand);
                 vehicle.setModel(model);
-                vehicle.setInsuranceExpiryDate(insuranceExpiry);
-                vehicle.setServiceDueDate(serviceDue);
+                vehicle.setInsuranceExpiryDate(LocalDate.parse(insuranceExpiry, formatter));
+                vehicle.setServiceDueDate(LocalDate.parse(serviceDue, formatter));
                 vehicle.setUser(user);
 
                 vehicleRepository.save(vehicle);
