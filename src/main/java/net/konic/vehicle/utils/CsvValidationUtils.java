@@ -1,6 +1,5 @@
 package net.konic.vehicle.utils;
-
-import net.konic.vehicle.InvalidInputException;
+import net.konic.vehicle.execption.InvalidInputException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
