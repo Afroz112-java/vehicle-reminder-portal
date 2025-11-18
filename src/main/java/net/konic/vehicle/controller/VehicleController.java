@@ -2,6 +2,7 @@ package net.konic.vehicle.controller;
 
 import net.konic.vehicle.dto.ApiResponse;
 import net.konic.vehicle.entity.Vehicle;
+import net.konic.vehicle.entity.VehicleType;
 import net.konic.vehicle.service.VehicleService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -65,5 +66,20 @@ public class VehicleController {
     public ResponseEntity<String> uploadCsv(@RequestParam("file") MultipartFile file) {
         vehicleService.saveUserAndVehiclesFromCsv(file);
         return ResponseEntity.ok("CSV Uploaded Successfully");
+    }
+
+    // Fetch cars or bikes
+    @GetMapping("/vehicle-type/id")
+    public List<Vehicle> getByType(@PathVariable String type) {
+        return vehicleService.getByType(VehicleType.valueOf(type.toUpperCase()));
+    }
+
+    // Fetch cars or bikes for a specific user
+    @GetMapping("/user/vehicle-type")
+    public List<Vehicle> getUserByType(
+            @PathVariable Long userId,
+            @PathVariable String type
+    ) {
+        return vehicleService.getUserVehiclesByType(userId, VehicleType.valueOf(type.toUpperCase()));
     }
 }

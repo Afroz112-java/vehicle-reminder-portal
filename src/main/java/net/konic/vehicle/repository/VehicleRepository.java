@@ -1,6 +1,7 @@
 package net.konic.vehicle.repository;
 
 import net.konic.vehicle.entity.Vehicle;
+import net.konic.vehicle.entity.VehicleType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,4 +23,10 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
     List<Vehicle> findVehiclesForInsuranceReminder(@Param("targetDate") LocalDate targetDate);
 
     Optional<Vehicle> findByRegNumber(String regNumber);
+
+    // ⭐ Filter by vehicle type (CAR/BIKE)
+    List<Vehicle> findByVehicleType(VehicleType vehicleType);
+
+    // ⭐ Filter by type AND user
+    List<Vehicle> findByUserIdAndVehicleType(Long userId, VehicleType vehicleType);
 }
