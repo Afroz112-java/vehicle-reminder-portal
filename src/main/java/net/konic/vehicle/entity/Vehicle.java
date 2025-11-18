@@ -20,6 +20,7 @@ public class Vehicle {
     private String regNumber;
     private String brand;
     private String model;
+    private String active;
     private String insuranceExpiryDate;
     private String serviceDueDate;
 

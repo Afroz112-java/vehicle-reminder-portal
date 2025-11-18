@@ -6,6 +6,8 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
+// Enable caching and scheduling features
+
 @EnableCaching
 @EnableScheduling
 public class VehicleReminderApplication {

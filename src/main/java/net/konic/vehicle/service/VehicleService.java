@@ -17,20 +17,28 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Optional;
-
+// This is the Service class for Vehicle
 @Service
+// Service class for Vehicle-related operations
+// Contains business logic for creating, retrieving, updating, and deleting vehicles
 public class VehicleService {
+
     @Autowired
+    // Repository for User entity
+
     private UserRepository userRepository;
-
+// Repository for Vehicle entity
     private final VehicleRepository vehicleRepository;
-
+// Constructor for VehicleService
     public VehicleService(VehicleRepository vehicleRepository) {
         this.vehicleRepository = vehicleRepository;
     }
 
     // Create vehicle
+    // Evicts relevant caches upon creation of a new vehicle
+
     @CacheEvict(value = {"vehicles", "vehicle"}, allEntries = true)
+    //  Creates a new vehicle and associates it with a user
     public Vehicle createVehicle(Vehicle vehicle) {
         if (vehicle.getUser() == null || vehicle.getUser().getEmail() == null) {
             throw new InvalidInputException("User email must be provided to create a vehicle.");
@@ -47,7 +55,9 @@ public class VehicleService {
     }
 
     // Get all vehicles
+    // Caches the result of retrieving all vehicles
     @Cacheable("vehicles")
+    //  Retrieves all vehicles from the database
     public List<Vehicle> getAllVehicles() {
         List<Vehicle> vehicles = vehicleRepository.findAll();
         if (vehicles.isEmpty()) {
