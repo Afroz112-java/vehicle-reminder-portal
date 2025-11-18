@@ -30,7 +30,7 @@ public class SecurityCon {
                 .csrf(csrf -> csrf.disable())
                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/validate").permitAll()
+                        .requestMatchers("/api/auth/register", "/api/auth/login","/api/reminder-config","/api/auth/validate").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/swagger-ui/**").permitAll()
                         .requestMatchers("/v3/**").permitAll()
