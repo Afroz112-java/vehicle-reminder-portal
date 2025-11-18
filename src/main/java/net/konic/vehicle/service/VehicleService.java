@@ -4,6 +4,7 @@ import com.opencsv.CSVReader;
 import net.konic.vehicle.dto.ApiResponse;
 import net.konic.vehicle.entity.User;
 import net.konic.vehicle.entity.Vehicle;
+import net.konic.vehicle.entity.VehicleType;
 import net.konic.vehicle.execption.InvalidInputException;
 import net.konic.vehicle.execption.ResourceNotFoundException;
 import net.konic.vehicle.repository.UserRepository;
@@ -24,8 +25,8 @@ import java.util.Optional;
 public class VehicleService {
     @Autowired
     private UserRepository userRepository;
-
     private final VehicleRepository vehicleRepository;
+
 
     public VehicleService(VehicleRepository vehicleRepository) {
         this.vehicleRepository = vehicleRepository;
@@ -46,6 +47,14 @@ public class VehicleService {
 
         vehicle.setUser(user);
         return vehicleRepository.save(vehicle);
+    }
+
+    public List<Vehicle> getByType(VehicleType type) {
+        return vehicleRepository.findByVehicleType(type);
+    }
+
+    public List<Vehicle> getUserVehiclesByType(Long userId, VehicleType type) {
+        return vehicleRepository.findByUserIdAndVehicleType(userId, type);
     }
 
     // Get all vehicles
