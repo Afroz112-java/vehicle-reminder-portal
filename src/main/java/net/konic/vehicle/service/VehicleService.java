@@ -107,6 +107,19 @@ public class VehicleService {
     }
 
     public void saveUserAndVehiclesFromCsv(MultipartFile file) {
+        // 🔍 1. Validate file name (must be .csv)
+        String fileName = file.getOriginalFilename();
+        if (fileName == null || !fileName.toLowerCase().endsWith(".csv")) {
+            throw new InvalidInputException("Invalid file type. Please upload a CSV file only.");
+        }
+
+        // 🔍 2. Validate MIME type (optional but safer)
+        String contentType = file.getContentType();
+        if (contentType != null &&
+                !contentType.equals("text/csv") &&
+                !contentType.equals("application/vnd.ms-excel")) {
+            throw new InvalidInputException("Invalid file format. Only CSV files are supported.");
+        }
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         try (CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream()))) {
             String[] row;
