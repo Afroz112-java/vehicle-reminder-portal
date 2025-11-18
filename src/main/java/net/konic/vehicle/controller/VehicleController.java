@@ -69,13 +69,13 @@ public class VehicleController {
     }
 
     // Fetch cars or bikes
-    @GetMapping("/vehicle-type/id")
+    @GetMapping("/vehicle-type/{type}")
     public List<Vehicle> getByType(@PathVariable String type) {
         return vehicleService.getByType(VehicleType.valueOf(type.toUpperCase()));
     }
 
     // Fetch cars or bikes for a specific user
-    @GetMapping("/user/vehicle-type")
+    @GetMapping("/user/{userId}/vehicle-type/{type}")
     public List<Vehicle> getUserByType(
             @PathVariable Long userId,
             @PathVariable String type
