@@ -9,6 +9,8 @@ import net.konic.vehicle.execption.InvalidInputException;
 import net.konic.vehicle.execption.ResourceNotFoundException;
 import net.konic.vehicle.repository.UserRepository;
 import net.konic.vehicle.repository.VehicleRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -23,10 +25,12 @@ import java.util.Optional;
 
 @Service
 public class VehicleService {
+    private static final Logger log = LoggerFactory.getLogger(VehicleService.class);
+
     @Autowired
     private UserRepository userRepository;
-    private final VehicleRepository vehicleRepository;
 
+    private final VehicleRepository vehicleRepository;
 
     public VehicleService(VehicleRepository vehicleRepository) {
         this.vehicleRepository = vehicleRepository;
@@ -34,16 +38,19 @@ public class VehicleService {
 
     // Create vehicle
     @CacheEvict(value = {"vehicles", "vehicle"}, allEntries = true)
-    public Vehicle createVehicle(@org.jetbrains.annotations.NotNull Vehicle vehicle) {
-        if (vehicle.getUser() == null || vehicle.getUser().getEmail() == null) {
     public Vehicle createVehicle(Vehicle vehicle) {
-        if (vehicle .getUser() == null || vehicle.getUser().getEmail() == null) {
+        if (vehicle == null) {
+            throw new InvalidInputException("Vehicle must not be null.");
+        }
+        if (vehicle.getUser() == null || vehicle.getUser().getEmail() == null || vehicle.getUser().getEmail().isBlank()) {
             throw new InvalidInputException("User email must be provided to create a vehicle.");
         }
 
-        String email = vehicle.getUser().getEmail();
+        String email = vehicle.getUser().getEmail().trim();
         User user = userRepository.findByEmail(email).orElseGet(() -> {
             User newUser = vehicle.getUser();
+            // ensure email is set on newUser
+            newUser.setEmail(email);
             return userRepository.save(newUser);
         });
 
@@ -82,13 +89,12 @@ public class VehicleService {
         Vehicle existingVehicle = vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cannot update — Vehicle not found with ID: " + vehicleId));
 
-        existingVehicle.setRegNumber(updatedVehicle.getRegNumber());
-        existingVehicle.setBrand(updatedVehicle.getBrand());
-        existingVehicle.setModel(updatedVehicle.getModel());
-        existingVehicle.setInsuranceExpiryDate(updatedVehicle.getInsuranceExpiryDate());
-        existingVehicle.setServiceDueDate(updatedVehicle.getServiceDueDate());
-        // existingVehicle.setOwnerName(updatedVehicle.getOwnerName());
-        // existingVehicle.setActive(updatedVehicle.isActive());
+        if (updatedVehicle.getRegNumber() != null) existingVehicle.setRegNumber(updatedVehicle.getRegNumber());
+        if (updatedVehicle.getBrand() != null) existingVehicle.setBrand(updatedVehicle.getBrand());
+        if (updatedVehicle.getModel() != null) existingVehicle.setModel(updatedVehicle.getModel());
+        if (updatedVehicle.getInsuranceExpiryDate() != null) existingVehicle.setInsuranceExpiryDate(updatedVehicle.getInsuranceExpiryDate());
+        if (updatedVehicle.getServiceDueDate() != null) existingVehicle.setServiceDueDate(updatedVehicle.getServiceDueDate());
+        // copy other needed fields as required
 
         return vehicleRepository.save(existingVehicle);
     }
@@ -109,20 +115,27 @@ public class VehicleService {
     }
 
     public void saveUserAndVehiclesFromCsv(MultipartFile file) {
-        // 🔍 1. Validate file name (must be .csv)
+        if (file == null) {
+            throw new InvalidInputException("File must not be null.");
+        }
+
+        // 1. Validate file name (must be .csv)
         String fileName = file.getOriginalFilename();
         if (fileName == null || !fileName.toLowerCase().endsWith(".csv")) {
             throw new InvalidInputException("Invalid file type. Please upload a CSV file only.");
         }
 
-        // 🔍 2. Validate MIME type (optional but safer)
+        // 2. Validate MIME type (optional)
         String contentType = file.getContentType();
         if (contentType != null &&
                 !contentType.equals("text/csv") &&
-                !contentType.equals("application/vnd.ms-excel")) {
+                !contentType.equals("application/vnd.ms-excel") &&
+                !contentType.equals("application/csv")) {
             throw new InvalidInputException("Invalid file format. Only CSV files are supported.");
         }
+
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
         try (CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream()))) {
             String[] row;
             boolean header = true;
@@ -133,21 +146,27 @@ public class VehicleService {
                     continue;
                 }
 
-                // ✅ Expecting 8 columns: Full Name, Email, Phone, Reg Num, Brand, Model, Insurance, Service Due
+                // Expecting at least 8 columns: Full Name, Email, Phone, Reg Num, Brand, Model, Insurance, Service Due
                 if (row.length < 8) {
-                    throw new InvalidInputException("Invalid CSV format. Expected 8 columns but got " + row.length);
+                    log.warn("Skipping CSV row due to insufficient columns: {}", (Object) row);
+                    continue; // skip invalid row instead of failing entire upload
                 }
 
-                String fullName = row[0];
-                String email = row[1];
-                String phone = row[2];
-                String regNumber = row[3];
-                String brand = row[4];
-                String model = row[5];
-                String insuranceExpiry = row[6];
-                String serviceDue = row[7];
+                String fullName = row[0].trim();
+                String email = row[1].trim();
+                String phone = row[2].trim();
+                String regNumber = row[3].trim();
+                String brand = row[4].trim();
+                String model = row[5].trim();
+                String insuranceExpiry = row[6].trim();
+                String serviceDue = row[7].trim();
 
-                // ✅ Find or create user
+                if (email.isEmpty() || regNumber.isEmpty()) {
+                    log.warn("Skipping row with missing mandatory fields (email/regNumber). Row: {}", (Object) row);
+                    continue;
+                }
+
+                // Find or create user
                 User user = userRepository.findByEmail(email).orElseGet(() -> {
                     User newUser = new User();
                     newUser.setName(fullName);
@@ -156,40 +175,47 @@ public class VehicleService {
                     return userRepository.save(newUser);
                 });
 
-                // ✅ Update phone if user exists but phone is missing
-                if (user.getPhone() == null && phone != null && !phone.isEmpty()) {
+                // Update phone if user exists but phone is missing
+                if ((user.getPhone() == null || user.getPhone().isBlank()) && phone != null && !phone.isEmpty()) {
                     user.setPhone(phone);
                     userRepository.save(user);
                 }
 
-                // ✅ Check if vehicle already exists
+                // Check if vehicle already exists
                 Optional<Vehicle> existingVehicleOpt = vehicleRepository.findByRegNumber(regNumber);
 
                 if (existingVehicleOpt.isPresent()) {
-                    // Already in DB — skip adding again
-                    System.out.println("Vehicle with regNumber " + regNumber + " already exists. Skipping insert.");
+                    log.info("Vehicle with regNumber {} already exists. Skipping insert.", regNumber);
                     continue;
                 }
 
-                // ✅ Create and save vehicle
+                // Create and save vehicle
                 Vehicle vehicle = new Vehicle();
                 vehicle.setRegNumber(regNumber);
                 vehicle.setBrand(brand);
                 vehicle.setModel(model);
-                vehicle.setInsuranceExpiryDate(LocalDate.parse(insuranceExpiry, formatter));
-                vehicle.setServiceDueDate(LocalDate.parse(serviceDue, formatter));
-                vehicle.setUser(user);
 
+                try {
+                    if (!insuranceExpiry.isEmpty()) {
+                        vehicle.setInsuranceExpiryDate(LocalDate.parse(insuranceExpiry, formatter));
+                    }
+                    if (!serviceDue.isEmpty()) {
+                        vehicle.setServiceDueDate(LocalDate.parse(serviceDue, formatter));
+                    }
+                } catch (Exception dateEx) {
+                    log.warn("Invalid date format for vehicle {}: {} / {}. Skipping this vehicle.", regNumber, insuranceExpiry, serviceDue);
+                    continue;
+                }
+
+                vehicle.setUser(user);
                 vehicleRepository.save(vehicle);
             }
 
         } catch (InvalidInputException e) {
-            throw e; // Let the global handler catch it
+            throw e; // rethrow custom exceptions
         } catch (Exception e) {
+            log.error("Error reading CSV file", e);
             throw new InvalidInputException("Error reading CSV: " + e.getMessage());
         }
     }
-
 }
-
-
