@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
@@ -20,12 +21,17 @@ public class Vehicle {
     private String regNumber;
     private String brand;
     private String model;
-    private String insuranceExpiryDate;
-    private String serviceDueDate;
+    private LocalDate insuranceExpiryDate;
+    private LocalDate serviceDueDate;
 
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    // ⭐ Vehicle type (CAR/BIKE)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private VehicleType vehicleType;
 
     // ✅ Many vehicles → one user
     @ManyToOne(fetch = FetchType.EAGER, cascade= CascadeType.ALL)
@@ -38,6 +44,12 @@ public class Vehicle {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
     }
+    // NEW FLAGS → email sent only once
+    @Column(nullable = false)
+    private boolean serviceReminderSent = false;
+
+    @Column(nullable = false)
+    private boolean insuranceReminderSent = false;
 
     @PreUpdate
     public void onUpdate() {
