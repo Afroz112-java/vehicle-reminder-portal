@@ -1,45 +1,63 @@
 package net.konic.vehicle.controller;
 
 import net.konic.vehicle.Schedular.RemainderScheduler;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-
 @RestController
-@RequestMapping("/reminder")
+@RequestMapping("/api/reminders")  // BASE URL
 public class ReminderController {
 
-    private final RemainderScheduler remainderScheduler;
+    @Autowired
+    private RemainderScheduler remainderScheduler;
 
-    public ReminderController(RemainderScheduler remainderScheduler) {
-        this.remainderScheduler = remainderScheduler;
+    // 1️⃣ Get Reminder Details by Audit ID
+    @GetMapping("/{id}")
+    public ResponseEntity<String> getReminderDetails(@PathVariable Long id) {
+        String result = remainderScheduler.getReminderDetails(id);
+        return ResponseEntity.ok(result);
     }
 
-    // 1️⃣ Trigger send all reminders manually
-    @PostMapping("/send-all")
-    public ResponseEntity<String> sendAllReminders() {
-        remainderScheduler.sendAllReminders();
-        return ResponseEntity.ok("All reminders sent successfully");
+    // 2️⃣ Trigger All Missing Reminders Manually
+    @PostMapping("/trigger")
+    public ResponseEntity<?> triggerAll() {
+        try {
+            remainderScheduler.sendAllReminders(); // THIS calls your scheduler logic 💡
+            return ResponseEntity.ok("Manual Trigger DONE. Scheduler executed.");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Trigger FAILED: " + e.getMessage());
+        }
     }
 
-    // 2️⃣ Send reminder for one particular vehicle ID
+    // 3️⃣ Send Reminder for ONE VEHICLE ID
     @PostMapping("/send/{id}")
-    public ResponseEntity<Map<String, Object>> sendReminderById(@PathVariable Long id) {
-        boolean sent = remainderScheduler.sendReminderById(id);
-
+    public ResponseEntity<?> sendReminderForVehicle(@PathVariable Long id) {
+        boolean result = remainderScheduler.sendReminderByIdSafely(id);
         return ResponseEntity.ok(
-                Map.of(
-                        "vehicleId", id,
-                        "status", sent ? "SUCCESS" : "FAILED"
-                )
+                result ? "Reminder sent successfully." : "Reminder FAILED or not due."
         );
     }
 
-    // 3️⃣ Get reminder audit details by reminderAudit ID
-    @GetMapping("/details/{id}")
-    public ResponseEntity<String> getReminderDetails(@PathVariable Long id) {
-        String details = remainderScheduler.getReminderDetails(id);
-        return ResponseEntity.ok(details);
+    // 4️⃣ Send ONLY missing reminders
+    @PostMapping("/send-missing")
+    public ResponseEntity<?> sendMissingReminders() {
+        int count = remainderScheduler.sendMissingRemindersSafely();
+        return ResponseEntity.ok("Missing reminders sent: " + count);
+    }
+
+    // 5️⃣ Export Audit Report to csv
+    @GetMapping("/export")
+    public ResponseEntity<?> exportRemindersCSV() {
+        byte[] file = remainderScheduler.exportReminderCSV();
+
+        if (file.length == 0) {
+            return ResponseEntity.badRequest().body("No data found to export");
+        }
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=reminders.csv")
+                .contentType(MediaType.TEXT_PLAIN)
+                .body(file);
     }
 }
