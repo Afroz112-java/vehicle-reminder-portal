@@ -28,6 +28,11 @@ public class Vehicle {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    // ⭐ Vehicle type (CAR/BIKE)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private VehicleType vehicleType;
+
     // ✅ Many vehicles → one user
     @ManyToOne(fetch = FetchType.EAGER, cascade= CascadeType.ALL)
     @JoinColumn(name = "user_id")
@@ -39,6 +44,12 @@ public class Vehicle {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
     }
+    // NEW FLAGS → email sent only once
+    @Column(nullable = false)
+    private boolean serviceReminderSent = false;
+
+    @Column(nullable = false)
+    private boolean insuranceReminderSent = false;
 
     @PreUpdate
     public void onUpdate() {

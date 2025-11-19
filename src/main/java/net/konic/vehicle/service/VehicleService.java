@@ -4,6 +4,7 @@ import com.opencsv.CSVReader;
 import net.konic.vehicle.dto.ApiResponse;
 import net.konic.vehicle.entity.User;
 import net.konic.vehicle.entity.Vehicle;
+import net.konic.vehicle.entity.VehicleType;
 import net.konic.vehicle.execption.InvalidInputException;
 import net.konic.vehicle.execption.ResourceNotFoundException;
 import net.konic.vehicle.repository.UserRepository;
@@ -24,8 +25,8 @@ import java.util.Optional;
 public class VehicleService {
     @Autowired
     private UserRepository userRepository;
-
     private final VehicleRepository vehicleRepository;
+
 
     public VehicleService(VehicleRepository vehicleRepository) {
         this.vehicleRepository = vehicleRepository;
@@ -33,23 +34,29 @@ public class VehicleService {
 
     // Create vehicle
     @CacheEvict(value = {"vehicles", "vehicle"}, allEntries = true)
-    public Vehicle createVehicle(Vehicle vehicle) {
-        // Validate: Check if User object or User email is missing
+    public Vehicle createVehicle(@org.jetbrains.annotations.NotNull Vehicle vehicle) {
         if (vehicle.getUser() == null || vehicle.getUser().getEmail() == null) {
-            // If missing, throw exception to prevent saving invalid data
+    public Vehicle createVehicle(Vehicle vehicle) {
+        if (vehicle .getUser() == null || vehicle.getUser().getEmail() == null) {
             throw new InvalidInputException("User email must be provided to create a vehicle.");
         }
-        // Extract the email from the Vehicle’s User object
+
         String email = vehicle.getUser().getEmail();
-        // Look for an existing user in the database using email
-        // .orElseGet() → if user not found, create a new one
         User user = userRepository.findByEmail(email).orElseGet(() -> {
-            User newUser = vehicle.getUser();        // Create new User object from vehicle
-            return userRepository.save(newUser);   // Save the new user to the database
+            User newUser = vehicle.getUser();
+            return userRepository.save(newUser);
         });
 
-        vehicle.setUser(user);                      // Assign the found or newly created user back to the vehicle
-        return vehicleRepository.save(vehicle);    // Save vehicle to DB
+        vehicle.setUser(user);
+        return vehicleRepository.save(vehicle);
+    }
+
+    public List<Vehicle> getByType(VehicleType type) {
+        return vehicleRepository.findByVehicleType(type);
+    }
+
+    public List<Vehicle> getUserVehiclesByType(Long userId, VehicleType type) {
+        return vehicleRepository.findByUserIdAndVehicleType(userId, type);
     }
 
     // Get all vehicles
@@ -102,6 +109,19 @@ public class VehicleService {
     }
 
     public void saveUserAndVehiclesFromCsv(MultipartFile file) {
+        // 🔍 1. Validate file name (must be .csv)
+        String fileName = file.getOriginalFilename();
+        if (fileName == null || !fileName.toLowerCase().endsWith(".csv")) {
+            throw new InvalidInputException("Invalid file type. Please upload a CSV file only.");
+        }
+
+        // 🔍 2. Validate MIME type (optional but safer)
+        String contentType = file.getContentType();
+        if (contentType != null &&
+                !contentType.equals("text/csv") &&
+                !contentType.equals("application/vnd.ms-excel")) {
+            throw new InvalidInputException("Invalid file format. Only CSV files are supported.");
+        }
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         try (CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream()))) {
             String[] row;
