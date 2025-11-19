@@ -20,7 +20,6 @@ import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class VehicleService {
@@ -36,7 +35,7 @@ public class VehicleService {
     // Create vehicle
     @CacheEvict(value = {"vehicles", "vehicle"}, allEntries = true)
     public Vehicle createVehicle(Vehicle vehicle) {
-        if (vehicle .getUser() == null || vehicle.getUser().getEmail() == null) {
+        if (vehicle.getUser() == null || vehicle.getUser().getEmail() == null) {
             throw new InvalidInputException("User email must be provided to create a vehicle.");
         }
 
@@ -128,6 +127,7 @@ public class VehicleService {
             throw new InvalidInputException("Uploaded file is empty.");
         }
     }
+
     // ---------------------------------------------------------
     // 2️⃣ ROW VALIDATION (column count)
     // ---------------------------------------------------------
@@ -138,6 +138,7 @@ public class VehicleService {
             );
         }
     }
+
     // ---------------------------------------------------------
     // 3️⃣ HANDLE USER
     // ---------------------------------------------------------
@@ -158,6 +159,7 @@ public class VehicleService {
 
         return user;
     }
+
     // ---------------------------------------------------------
     // 4️⃣ HANDLE VEHICLE
     // ---------------------------------------------------------
@@ -166,7 +168,8 @@ public class VehicleService {
                                String brand,
                                String model,
                                LocalDate insuranceDate,
-                               LocalDate serviceDueDate) {
+                               LocalDate serviceDueDate,
+                               VehicleType vehicleType) {
 
         if (vehicleRepository.findByRegNumber(regNumber).isPresent()) {
             System.out.println("Vehicle " + regNumber + " already exists. Skipping.");
@@ -180,9 +183,14 @@ public class VehicleService {
         vehicle.setInsuranceExpiryDate(insuranceDate);
         vehicle.setServiceDueDate(serviceDueDate);
         vehicle.setUser(user);
+        vehicle.setInsuranceReminderSent(Boolean.FALSE);
+        vehicle.setServiceReminderSent(Boolean.FALSE);
+        vehicle.setVehicleType(vehicleType);
+
 
         vehicleRepository.save(vehicle);
     }
+
     // ---------------------------------------------------------
     // 5️⃣ MAIN METHOD (super clean)
     // ---------------------------------------------------------
@@ -205,8 +213,8 @@ public class VehicleService {
                     continue;
                 }
 
-                // Step 2: Validate number of columns
-                validateRowStructure(row, 8);
+                // Step 2: Validate number of columns (now 11)
+                validateRowStructure(row, 11);
 
                 // Step 3: Validate each field carefully
                 String fullName = CsvValidationUtils.required(row[0], "Full Name");
@@ -222,12 +230,14 @@ public class VehicleService {
                 LocalDate serviceDueDate =
                         CsvValidationUtils.validateDate(row[7], "Service Due Date", formatter);
 
+                // ⭐ Vehicle Type is at column index 10
+                VehicleType vehicleType = VehicleType.valueOf(row[10].trim().toUpperCase());
 
                 // Step 4: Save or update user
                 User user = handleUser(fullName, email, phone);
 
-                // Step 5: Save vehicle
-                handleVehicle(user, regNumber, brand, model, insuranceDate, serviceDueDate);
+                // Step 5: Save vehicle with type
+                handleVehicle(user, regNumber, brand, model, insuranceDate, serviceDueDate, vehicleType);
             }
 
         } catch (InvalidInputException e) {
@@ -237,5 +247,3 @@ public class VehicleService {
         }
     }
 }
-
-
