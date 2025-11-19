@@ -9,6 +9,7 @@ import net.konic.vehicle.entity.AuthEntity;
 import net.konic.vehicle.repository.AuthRepository;
 import net.konic.vehicle.security.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -39,10 +40,12 @@ public class AuthServiceImpl implements AuthService {
 
         authRepository.save(user);
 
-        // Generate JWT token
-        String token = jwtTokenUtil.generateToken(user.getUsername());
+//        // Generate JWT token
+//        String token = jwtTokenUtil.generateToken(user.getUsername());
+//
+//        return new AuthResponse(token, "User registered successfully");
+        return new AuthResponse(null, "Register successful");
 
-        return new AuthResponse(token, "User registered successfully");
     }
 
     @Override
@@ -53,7 +56,7 @@ public class AuthServiceImpl implements AuthService {
 
         // Validate password
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new RuntimeException( "Invalid credentials");
         }
 
         // Generate JWT token
