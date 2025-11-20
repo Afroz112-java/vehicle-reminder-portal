@@ -29,6 +29,7 @@ public class ReminderAudit {
     @Id                             // Marks this field as the primary key
     @GeneratedValue(strategy = GenerationType.IDENTITY)   // Auto-generates the ID value
     private Long id;                                      // Primary key
+    private Long vehicleId;  // or private Long vehicle_id;
 
     private Long userId;
     private String vehicleRegNumber;
@@ -36,7 +37,10 @@ public class ReminderAudit {
     private String email;
     private boolean emailSent;
     private String message;
+     // NOT sentDate
+
 
     @CreatedDate                   // Auto-filled when the record is created
+                  // NOT vehicleId
     private LocalDateTime sentAt;
 }
