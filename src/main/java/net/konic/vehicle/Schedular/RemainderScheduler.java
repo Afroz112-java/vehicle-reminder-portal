@@ -21,10 +21,19 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.HashSet;
 
-@Component
-@Slf4j
+@Component // Marks this class as a Spring-managed bean for dependency injection.
+@Slf4j     // Automatically provides a Logger named 'log' for logging messages.
 public class RemainderScheduler {
-
+    /*
+     * WHY WE NEED THIS SCHEDULER CLASS?
+     * ----------------------------------
+     *  This class runs automatically based on CRON time.
+     *  It checks all vehicles in the database.
+     *  Finds which vehicles need service or insurance reminders.
+     *  Sends email to users.
+     *  Stores email details in reminder_audit table.
+     *  CRON timing is controlled from database (dynamic scheduling).
+     */
     private final RemainderConfigService remainderConfigService;
     private final VehicleRepository vehicleRepository;
     private final EmailService emailService;
@@ -43,30 +52,31 @@ public class RemainderScheduler {
         this.vehicleRepository = vehicleRepository;
         this.vehicleService = vehicleService;
     }
-
+    // 1. MAIN SCHEDULER  → runs automatically
+    //    CRON TIME IS DYNAMIC — COMING FROM DATABASE
     // --- DYNAMIC CRON EXPRESSION ---
     @Scheduled(cron = "#{remainderConfigService.getConfig().getCronExpression()}")
     public void sendReminders() {
 
         log.info("Reminder Scheduler started at {}", Instant.now());
-
+        // Fetch serviceDaysBefore & insuranceDaysBefore from database table "reminder_config"
         ReminderConfig config = remainderConfigService.getConfig();
         int serviceDaysBefore = config.getServiceDaysBefore();
         int insuranceDaysBefore = config.getInsuranceDaysBefore();
 
         log.info("Loaded Config → Service: {} days, Insurance: {} days",
                 serviceDaysBefore, insuranceDaysBefore);
-
+        // Calculate dates for reminder
         LocalDate today = LocalDate.now();
         LocalDate serviceTarget = today.plusDays(serviceDaysBefore);
         LocalDate insuranceTarget = today.plusDays(insuranceDaysBefore);
-
+        // Fetch vehicles that need reminders
         List<Vehicle> serviceVehicles = vehicleRepository.findVehiclesForServiceReminder(serviceTarget);
         List<Vehicle> insuranceVehicles = vehicleRepository.findVehiclesForInsuranceReminder(insuranceTarget);
 
         log.info("Vehicles → Service: {}, Insurance: {}",
                 serviceVehicles.size(), insuranceVehicles.size());
-
+        // To avoid sending duplicate reminders
         Set<Long> processedIds = new HashSet<>();
 
         // SERVICE + BOTH
@@ -167,7 +177,7 @@ public class RemainderScheduler {
     // ---------------------- AUDIT -----------------------
 
     private void auditReminder(Vehicle v, String type, boolean success, String message) {
-
+        // Stores email log into reminder_audit table
         ReminderAudit audit = ReminderAudit.builder()
                 .userId(v.getUser() != null ? v.getUser().getId() : null)
                 .vehicleRegNumber(v.getRegNumber())
