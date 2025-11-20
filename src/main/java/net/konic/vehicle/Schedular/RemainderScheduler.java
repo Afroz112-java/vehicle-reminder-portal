@@ -3,10 +3,12 @@ package net.konic.vehicle.Schedular;
 import lombok.extern.slf4j.Slf4j;
 import net.konic.vehicle.Email.EmailService;
 import net.konic.vehicle.dto.ReminderDTO;
+import net.konic.vehicle.entity.ReminderConfig;
 import net.konic.vehicle.entity.Vehicle;
 import net.konic.vehicle.entity.ReminderAudit;
 import net.konic.vehicle.repository.ReminderAuditRepository;
 import net.konic.vehicle.repository.VehicleRepository;
+import net.konic.vehicle.service.RemainderConfigService;
 import net.konic.vehicle.service.VehicleService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -27,26 +29,35 @@ public class RemainderScheduler {
     private final EmailService emailService;
     private final VehicleService vehicleService;
     private final ReminderAuditRepository reminderAuditRepository;
+    private final RemainderConfigService remainderConfigService;
 
-    @Value("${reminder.service.daysBefore}")
-    private int serviceDaysBefore;
-
-    @Value("${reminder.insurance.daysBefore}")
-    private int insuranceDaysBefore;
+//    @Value("${reminder.service.daysBefore}")
+//    private int serviceDaysBefore;
+//
+//    @Value("${reminder.insurance.daysBefore}")
+//    private int insuranceDaysBefore;
 
     public RemainderScheduler(EmailService emailService,
                               VehicleRepository vehicleRepository,
                               VehicleService vehicleService,
-                              ReminderAuditRepository reminderAuditRepository) {
+                              ReminderAuditRepository reminderAuditRepository, RemainderConfigService remainderConfigService) {
         this.reminderAuditRepository = reminderAuditRepository;
         this.emailService = emailService;
         this.vehicleRepository = vehicleRepository;
         this.vehicleService = vehicleService;
+        this.remainderConfigService= remainderConfigService;
     }
 
-    @Scheduled(cron = "${reminder.scheduler.cron}")
+    // --- DYNAMIC CRON EXPRESSION ---
+    @Scheduled(cron = "#{remainderConfigService.getConfig().getCronExpression()}")
     public void sendReminders() {
         log.info("Reminder Scheduler started at {}", Instant.now());
+
+        ReminderConfig config = remainderConfigService.getConfig();
+        int serviceDaysBefore = config.getServiceDaysBefore();
+        int insuranceDaysBefore = config.getInsuranceDaysBefore();
+        log.info("Loaded Config → Service: {} days, Insurance: {} days",
+                serviceDaysBefore, insuranceDaysBefore);
 
         LocalDate today = LocalDate.now();
         LocalDate serviceTarget = today.plusDays(serviceDaysBefore);
@@ -55,7 +66,8 @@ public class RemainderScheduler {
         List<Vehicle> serviceVehicles = vehicleRepository.findVehiclesForServiceReminder(serviceTarget);
         List<Vehicle> insuranceVehicles = vehicleRepository.findVehiclesForInsuranceReminder(insuranceTarget);
 
-        log.info(" Scheduler fetched vehicles — Service: {}, Insurance: {}", serviceVehicles.size(), insuranceVehicles.size());
+        log.info("Vehicles → Service: {}, Insurance: {}",
+                serviceVehicles.size(), insuranceVehicles.size());
 
         Set<Long> processedVehicleIds = new java.util.HashSet<>();
 
