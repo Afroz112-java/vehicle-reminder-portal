@@ -104,7 +104,15 @@ public class VehicleService {
         if (updatedVehicle.getInsuranceExpiryDate() != null) existingVehicle.setInsuranceExpiryDate(updatedVehicle.getInsuranceExpiryDate());
         if (updatedVehicle.getServiceDueDate() != null) existingVehicle.setServiceDueDate(updatedVehicle.getServiceDueDate());
 
-        return vehicleRepository.save(existingVehicle);
+        if (updatedVehicle.getRegNumber() != null) existing.setRegNumber(updatedVehicle.getRegNumber());
+        if (updatedVehicle.getBrand() != null) existing.setBrand(updatedVehicle.getBrand());
+        if (updatedVehicle.getModel() != null) existing.setModel(updatedVehicle.getModel());
+        if (updatedVehicle.getInsuranceExpiryDate() != null)
+            existing.setInsuranceExpiryDate(updatedVehicle.getInsuranceExpiryDate());
+        if (updatedVehicle.getServiceDueDate() != null)
+            existing.setServiceDueDate(updatedVehicle.getServiceDueDate());
+
+        return vehicleRepository.save(existing);
     }
 
     // ----------------------- DELETE VEHICLE -----------------------
@@ -113,6 +121,7 @@ public class VehicleService {
         if (!vehicleRepository.existsById(vehicleId)) {
             throw new ResourceNotFoundException("Vehicle not found with ID: " + vehicleId);
         }
+
         vehicleRepository.deleteById(vehicleId);
         return new ApiResponse(true, "Vehicle deleted successfully");
     }
@@ -150,7 +159,7 @@ public class VehicleService {
     private void validateRowStructure(String[] row, int expectedColumns) {
         if (row.length < expectedColumns) {
             throw new InvalidInputException(
-                    "Invalid CSV format. Expected " + expectedColumns + " columns but got " + row.length
+                    "Invalid CSV format. Expected " + expected + " columns but got " + row.length
             );
         }
     }
@@ -207,7 +216,6 @@ public class VehicleService {
     public void saveUserAndVehiclesFromCsv(MultipartFile file) {
 
         validateCsvFile(file);
-
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
         try (CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream()))) {
@@ -231,11 +239,8 @@ public class VehicleService {
                 String brand = CsvValidationUtils.required(row[4], "Brand");
                 String model = CsvValidationUtils.required(row[5], "Model");
 
-                LocalDate insuranceDate =
-                        CsvValidationUtils.validateDate(row[6], "Insurance Expiry", formatter);
-
-                LocalDate serviceDueDate =
-                        CsvValidationUtils.validateDate(row[7], "Service Due Date", formatter);
+                LocalDate insuranceDate = CsvValidationUtils.validateDate(row[6], "Insurance Expiry", formatter);
+                LocalDate serviceDueDate = CsvValidationUtils.validateDate(row[7], "Service Due Date", formatter);
 
                 VehicleType vehicleType =
                         VehicleType.valueOf(row[10].trim().toUpperCase());
@@ -250,7 +255,7 @@ public class VehicleService {
             throw e;
 
         } catch (Exception e) {
-            log.error("Error reading CSV file", e);
+            log.error("CSV processing error", e);
             throw new InvalidInputException("Error reading CSV: " + e.getMessage());
         }
     }
