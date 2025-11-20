@@ -33,7 +33,7 @@ public class ReminderController {
     // 3️⃣ Send Reminder for ONE VEHICLE ID
     @PostMapping("/send/{id}")
     public ResponseEntity<?> sendReminderForVehicle(@PathVariable Long id) {
-        boolean result = remainderScheduler.sendReminderByIdSafely(id);
+        boolean result = remainderScheduler.sendReminderById(id);
         return ResponseEntity.ok(
                 result ? "Reminder sent successfully." : "Reminder FAILED or not due."
         );

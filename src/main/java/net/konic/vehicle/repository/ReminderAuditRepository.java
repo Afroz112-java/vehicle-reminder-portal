@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Repository
 public interface ReminderAuditRepository extends JpaRepository<ReminderAudit, Long> {
@@ -19,6 +20,8 @@ public interface ReminderAuditRepository extends JpaRepository<ReminderAudit, Lo
     );
 
     ReminderAudit findFirstByVehicleIdOrderBySentAtDesc(Long id);
+    Optional<ReminderAudit> findTopByVehicleRegNumberOrderBySentAtDesc(String regNumber);
+
 
 
 }
