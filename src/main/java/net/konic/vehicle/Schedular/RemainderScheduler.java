@@ -49,7 +49,7 @@ public class RemainderScheduler {
     public void sendReminders() {
 
         log.info("Reminder Scheduler started at {}", Instant.now());
-
+  
         ReminderConfig config = remainderConfigService.getConfig();
         int serviceDaysBefore = config.getServiceDaysBefore();
         int insuranceDaysBefore = config.getInsuranceDaysBefore();
