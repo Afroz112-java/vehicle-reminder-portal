@@ -104,15 +104,7 @@ public class VehicleService {
         if (updatedVehicle.getInsuranceExpiryDate() != null) existingVehicle.setInsuranceExpiryDate(updatedVehicle.getInsuranceExpiryDate());
         if (updatedVehicle.getServiceDueDate() != null) existingVehicle.setServiceDueDate(updatedVehicle.getServiceDueDate());
 
-        if (updatedVehicle.getRegNumber() != null) existing.setRegNumber(updatedVehicle.getRegNumber());
-        if (updatedVehicle.getBrand() != null) existing.setBrand(updatedVehicle.getBrand());
-        if (updatedVehicle.getModel() != null) existing.setModel(updatedVehicle.getModel());
-        if (updatedVehicle.getInsuranceExpiryDate() != null)
-            existing.setInsuranceExpiryDate(updatedVehicle.getInsuranceExpiryDate());
-        if (updatedVehicle.getServiceDueDate() != null)
-            existing.setServiceDueDate(updatedVehicle.getServiceDueDate());
-
-        return vehicleRepository.save(existing);
+        return vehicleRepository.save(existingVehicle);
     }
 
     // ----------------------- DELETE VEHICLE -----------------------
@@ -134,8 +126,7 @@ public class VehicleService {
     // =========================================================================
     //                          HELPER METHODS (NO LOGIC CHANGE)
     // =========================================================================
-
-    private void validateCsvFile(MultipartFile file) {
+    public void validateCsvFile(MultipartFile file) {
 
         if (file == null || file.isEmpty()) {
             throw new InvalidInputException("Uploaded file is empty.");
@@ -159,7 +150,7 @@ public class VehicleService {
     private void validateRowStructure(String[] row, int expectedColumns) {
         if (row.length < expectedColumns) {
             throw new InvalidInputException(
-                    "Invalid CSV format. Expected " + expected + " columns but got " + row.length
+                    "Invalid CSV format. Expected " + expectedColumns + " columns but got " + row.length
             );
         }
     }
@@ -177,6 +168,7 @@ public class VehicleService {
         if (user.getPhone() == null || user.getPhone().isBlank()) {
             user.setPhone(phone);
             userRepository.save(user);
+
         }
 
         return user;
@@ -212,7 +204,7 @@ public class VehicleService {
     // =========================================================================
     //                        MAIN CSV IMPORT METHOD
     // =========================================================================
-
+    @CacheEvict(value = "vehicles", allEntries = true)
     public void saveUserAndVehiclesFromCsv(MultipartFile file) {
 
         validateCsvFile(file);
