@@ -70,7 +70,7 @@ public class RemainderScheduler {
                 serviceVehicles.size(), insuranceVehicles.size());
 
         Set<Long> processedVehicleIds = new java.util.HashSet<>();
-
+        // Both
         for (Vehicle v : serviceVehicles) {
             boolean inInsuranceList = insuranceVehicles.stream()
                     .anyMatch(i -> Objects.equals(i.getId(), v.getId()));
