@@ -38,9 +38,7 @@ public class VehicleService {
         this.vehicleRepository = vehicleRepository;
     }
 
-    // ---------------------------------------------------------
-    // CREATE VEHICLE
-    // ---------------------------------------------------------
+    // ----------------------- CREATE VEHICLE -----------------------
     @CacheEvict(value = {"vehicles", "vehicle"}, allEntries = true)
     public Vehicle createVehicle(Vehicle vehicle) {
 
@@ -51,6 +49,7 @@ public class VehicleService {
         if (vehicle.getUser() == null ||
                 vehicle.getUser().getEmail() == null ||
                 vehicle.getUser().getEmail().isBlank()) {
+
             throw new InvalidInputException("User email must be provided to create a vehicle.");
         }
 
@@ -66,9 +65,7 @@ public class VehicleService {
         return vehicleRepository.save(vehicle);
     }
 
-    // ---------------------------------------------------------
-    // GET VEHICLES
-    // ---------------------------------------------------------
+    // ----------------------- GET BY TYPE -----------------------
     public List<Vehicle> getByType(VehicleType type) {
         return vehicleRepository.findByVehicleType(type);
     }
@@ -77,6 +74,7 @@ public class VehicleService {
         return vehicleRepository.findByUserIdAndVehicleType(userId, type);
     }
 
+    // ----------------------- GET ALL VEHICLES -----------------------
     @Cacheable("vehicles")
     public List<Vehicle> getAllVehicles() {
         List<Vehicle> vehicles = vehicleRepository.findAll();
@@ -86,20 +84,25 @@ public class VehicleService {
         return vehicles;
     }
 
+    // ----------------------- GET VEHICLE BY ID -----------------------
     @Cacheable(value = "vehicle", key = "#vehicleId")
     public Vehicle getVehicleById(Long vehicleId) {
         return vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found with ID: " + vehicleId));
     }
 
-    // ---------------------------------------------------------
-    // UPDATE VEHICLE
-    // ---------------------------------------------------------
+    // ----------------------- UPDATE VEHICLE -----------------------
     @CacheEvict(value = {"vehicles", "vehicle"}, allEntries = true)
     public Vehicle updateVehicle(Long vehicleId, Vehicle updatedVehicle) {
 
-        Vehicle existing = vehicleRepository.findById(vehicleId)
-                .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found with ID: " + vehicleId));
+        Vehicle existingVehicle = vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cannot update — Vehicle not found with ID: " + vehicleId));
+
+        if (updatedVehicle.getRegNumber() != null) existingVehicle.setRegNumber(updatedVehicle.getRegNumber());
+        if (updatedVehicle.getBrand() != null) existingVehicle.setBrand(updatedVehicle.getBrand());
+        if (updatedVehicle.getModel() != null) existingVehicle.setModel(updatedVehicle.getModel());
+        if (updatedVehicle.getInsuranceExpiryDate() != null) existingVehicle.setInsuranceExpiryDate(updatedVehicle.getInsuranceExpiryDate());
+        if (updatedVehicle.getServiceDueDate() != null) existingVehicle.setServiceDueDate(updatedVehicle.getServiceDueDate());
 
         if (updatedVehicle.getRegNumber() != null) existing.setRegNumber(updatedVehicle.getRegNumber());
         if (updatedVehicle.getBrand() != null) existing.setBrand(updatedVehicle.getBrand());
@@ -112,9 +115,7 @@ public class VehicleService {
         return vehicleRepository.save(existing);
     }
 
-    // ---------------------------------------------------------
-    // DELETE VEHICLE
-    // ---------------------------------------------------------
+    // ----------------------- DELETE VEHICLE -----------------------
     @CacheEvict(value = {"vehicles", "vehicle"}, allEntries = true)
     public ApiResponse deleteVehicle(Long vehicleId) {
         if (!vehicleRepository.existsById(vehicleId)) {
@@ -125,13 +126,15 @@ public class VehicleService {
         return new ApiResponse(true, "Vehicle deleted successfully");
     }
 
+    // ----------------------- DASHBOARD -----------------------
     public long getTotalVehicles() {
         return vehicleRepository.count();
     }
 
-    // ---------------------------------------------------------
-    // CSV VALIDATION
-    // ---------------------------------------------------------
+    // =========================================================================
+    //                          HELPER METHODS (NO LOGIC CHANGE)
+    // =========================================================================
+
     private void validateCsvFile(MultipartFile file) {
 
         if (file == null || file.isEmpty()) {
@@ -143,26 +146,24 @@ public class VehicleService {
             throw new InvalidInputException("Only CSV files are allowed.");
         }
 
-        String type = file.getContentType();
-        if (type != null &&
-                !type.equals("text/csv") &&
-                !type.equals("application/csv") &&
-                !type.equals("application/vnd.ms-excel")) {
-            throw new InvalidInputException("Invalid file format. Please upload a CSV file.");
+        String contentType = file.getContentType();
+        if (contentType != null &&
+                !contentType.equals("text/csv") &&
+                !contentType.equals("application/vnd.ms-excel") &&
+                !contentType.equals("application/csv")) {
+
+            throw new InvalidInputException("Invalid file format. Only CSV files are supported.");
         }
     }
 
-    private void validateRowStructure(String[] row, int expected) {
-        if (row.length < expected) {
+    private void validateRowStructure(String[] row, int expectedColumns) {
+        if (row.length < expectedColumns) {
             throw new InvalidInputException(
                     "Invalid CSV format. Expected " + expected + " columns but got " + row.length
             );
         }
     }
 
-    // ---------------------------------------------------------
-    // HANDLE USER
-    // ---------------------------------------------------------
     private User handleUser(String fullName, String email, String phone) {
 
         User user = userRepository.findByEmail(email).orElseGet(() -> {
@@ -181,9 +182,6 @@ public class VehicleService {
         return user;
     }
 
-    // ---------------------------------------------------------
-    // HANDLE VEHICLE
-    // ---------------------------------------------------------
     private void handleVehicle(User user,
                                String regNumber,
                                String brand,
@@ -203,17 +201,18 @@ public class VehicleService {
         vehicle.setModel(model);
         vehicle.setInsuranceExpiryDate(insuranceDate);
         vehicle.setServiceDueDate(serviceDueDate);
-        vehicle.setVehicleType(vehicleType);
         vehicle.setUser(user);
+        vehicle.setVehicleType(vehicleType);
         vehicle.setInsuranceReminderSent(false);
         vehicle.setServiceReminderSent(false);
 
         vehicleRepository.save(vehicle);
     }
 
-    // ---------------------------------------------------------
-    // MAIN CSV IMPORT METHOD
-    // ---------------------------------------------------------
+    // =========================================================================
+    //                        MAIN CSV IMPORT METHOD
+    // =========================================================================
+
     public void saveUserAndVehiclesFromCsv(MultipartFile file) {
 
         validateCsvFile(file);
@@ -243,11 +242,13 @@ public class VehicleService {
                 LocalDate insuranceDate = CsvValidationUtils.validateDate(row[6], "Insurance Expiry", formatter);
                 LocalDate serviceDueDate = CsvValidationUtils.validateDate(row[7], "Service Due Date", formatter);
 
-                VehicleType vehicleType = VehicleType.valueOf(row[10].trim().toUpperCase());
+                VehicleType vehicleType =
+                        VehicleType.valueOf(row[10].trim().toUpperCase());
 
                 User user = handleUser(fullName, email, phone);
 
-                handleVehicle(user, regNumber, brand, model, insuranceDate, serviceDueDate, vehicleType);
+                handleVehicle(user, regNumber, brand, model,
+                        insuranceDate, serviceDueDate, vehicleType);
             }
 
         } catch (InvalidInputException e) {
