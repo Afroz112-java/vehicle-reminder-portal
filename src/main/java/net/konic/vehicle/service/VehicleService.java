@@ -128,9 +128,13 @@ public class VehicleService {
     // =========================================================================
     public void validateCsvFile(MultipartFile file) {
 
-        if (file == null || file.isEmpty()) {
+//        if (file == null || file.isEmpty()) {
+//            throw new InvalidInputException("Uploaded file is empty.");
+//        }
+        if (file == null || file.getSize() == 0) {
             throw new InvalidInputException("Uploaded file is empty.");
         }
+
 
         String fileName = file.getOriginalFilename();
         if (fileName == null || !fileName.toLowerCase().endsWith(".csv")) {
@@ -214,11 +218,16 @@ public class VehicleService {
 
             String[] row;
             boolean header = true;
+            boolean hasData = false;
 
             while ((row = reader.readNext()) != null) {
 
                 if (header) {
                     header = false;
+                    continue;
+                }
+                // Ignore empty lines
+                if (row.length == 0 || (row[0] == null || row[0].isBlank())) {
                     continue;
                 }
 
@@ -241,6 +250,10 @@ public class VehicleService {
 
                 handleVehicle(user, regNumber, brand, model,
                         insuranceDate, serviceDueDate, vehicleType);
+            }
+            // ⭐ If no rows except header → throw error
+            if (!hasData) {
+                throw new InvalidInputException("CSV file contains no data.");
             }
 
         } catch (InvalidInputException e) {
