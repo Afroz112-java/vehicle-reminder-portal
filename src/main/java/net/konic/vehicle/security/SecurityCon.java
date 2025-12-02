@@ -39,7 +39,7 @@ public class SecurityCon {
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/swagger-ui/**").permitAll()
                         .requestMatchers("/v3/**").permitAll()
-
+                        .requestMatchers("/api").permitAll()
                         .anyRequest().authenticated()
                 )
                 // Use JWT entry point for unauthorized responses
@@ -54,7 +54,7 @@ public class SecurityCon {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5173"));
+        config.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:8088"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
